@@ -8,6 +8,7 @@ package web
 
 import (
 	"github.com/gin-gonic/gin"
+
 	"my-cubing/web/api"
 	"my-cubing/web/web"
 )
@@ -22,7 +23,7 @@ func (c *Client) Run() {
 
 	route := c.e.Group("/")
 	api.AddApiRoute(route)
-	web.AddWebRoute(route)
+	web.AddWebRoute(c.e)
 
 	if err := c.e.Run("0.0.0.0:8081"); err != nil {
 		panic(err)

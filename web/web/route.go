@@ -6,12 +6,25 @@
 
 package web
 
-import "github.com/gin-gonic/gin"
+import (
+	"path"
 
-func AddWebRoute(route *gin.RouterGroup) {
-	web := route.Group("/web")
-	{
-		web.GET("/score")  // 成绩记录页
-		web.GET("/report") // 报告页
-	}
+	"github.com/gin-gonic/gin"
+)
+
+const (
+	staticHtmlPath = "./static/html/"
+	staticIconPath = "./static/favicon.ico"
+	staticCssPath  = "./static/css"
+	staticJsPath   = "./static/js"
+)
+
+func AddWebRoute(e *gin.Engine) {
+	e.Static("/css", staticCssPath)
+	e.Static("/js", staticJsPath)
+
+	e.StaticFile("/favicon.ico", staticIconPath)
+	e.StaticFile("/", path.Join(staticHtmlPath, "report.html"))
+	e.StaticFile("/score", path.Join(staticHtmlPath, "score.html"))   // 成绩记录页
+	e.StaticFile("/report", path.Join(staticHtmlPath, "report.html")) // 报告页
 }
