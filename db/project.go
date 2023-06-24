@@ -1,10 +1,24 @@
 /*
- * Copyright (c) 2023 guojia99 All rights reserved.
- * Created: 2023/6/22 下午6:45.
- * Author:  guojia(https://github.com/guojia99)
+ *  * Copyright (c) 2023 guojia99 All rights reserved.
+ *  * Created: 2023/6/24 下午12:48.
+ *  * Author: guojia(https://github.com/guojia99)
  */
 
-package api
+package db
+
+func StrToProject(str string) Project {
+	for key, val := range cubeProjectCnCode {
+		if val == str {
+			return key
+		}
+	}
+	for key, val := range cubeProjectCnCode {
+		if val == str {
+			return key
+		}
+	}
+	return 0
+}
 
 type Project int
 
@@ -17,7 +31,7 @@ func (p Project) Cn() string {
 }
 
 const (
-	JuBaoHaoHao Project = iota
+	JuBaoHaoHao Project = iota + 1
 	Cube222
 	Cube333
 	Cube444

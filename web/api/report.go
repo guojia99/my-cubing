@@ -5,3 +5,10 @@
  */
 
 package api
+
+import "github.com/gin-gonic/gin"
+
+func ReadReportByUser(ctx *gin.Context)        {}
+func ReadReportByContest(ctx *gin.Context)     {}
+func ReadReportBest(ctx *gin.Context)          {}
+func ReadReportByProjectBest(ctx *gin.Context) {}

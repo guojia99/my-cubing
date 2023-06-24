@@ -14,7 +14,7 @@ import (
 
 var (
 	DB       *gorm.DB
-	dbDriver = "sqlite"
+	dbDriver = "mysql"
 )
 
 func init() {
@@ -25,7 +25,7 @@ func init() {
 		DB, err = gorm.Open(sqlite.Open("./database.db"), &gorm.Config{})
 	case "mysql":
 		cfg := mysql.Config{
-			DSN: "root:guojia@tcp(127.0.0.1:3306)/mycube?charset=utf8&parseTime=True&loc=Local", // DSN data source name
+			DSN: "root:my123456@tcp(127.0.0.1:3306)/mycube?charset=utf8&parseTime=True&loc=Local", // DSN data source name
 		}
 		DB, err = gorm.Open(mysql.New(cfg), &gorm.Config{})
 	}
