@@ -6,7 +6,11 @@
 
 package db
 
-import "time"
+import (
+	"fmt"
+	"sort"
+	"time"
+)
 
 // Score 成绩表
 type Score struct {
@@ -29,14 +33,70 @@ type Score struct {
 	Avg     float64 `json:"Avg" gorm:"column:avg;NULL"`             // 五把平均成绩
 }
 
-func (s Score) GetResult() []float64 {
+func (s *Score) SetResult(in []float64) error {
+	if len(in) == 0 {
+		return nil
+	}
+
+	switch s.Project {
+	case JuBaoHaoHao, OtherCola:
+		if len(in) <= 0 {
+			return fmt.Errorf("需要输入一个成绩")
+		}
+		s.Result1 = in[0]
+		s.Best = in[0]
+		s.Avg = in[0]
+		// 五次的项目
+	case Cube222, Cube333, Cube444, Cube555, CubeSk, CubePy, CubeSq1, CubeMinx, CubeClock, Cube333OH:
+		if len(in) != 5 {
+			return fmt.Errorf("该项目需要输入5个成绩")
+		}
+		s.Result1, s.Result2, s.Result3, s.Result4, s.Result5 = in[0], in[1], in[2], in[3], in[4]
+		dnf := s.GetDNF()
+
+		sort.Slice(in, func(i, j int) bool { return in[i] > in[j] })
+		s.Best = in[1]
+		switch {
+		case dnf == 5:
+			return nil
+		case dnf >= 2:
+			s.Avg = 0
+		default:
+			// 去头尾取平均
+			s.Avg = (in[1] + in[2] + in[3]) / 3
+		}
+		return nil
+		// 三次的项目
+	case Cube666, Cube777, Cube333FM, Cube333BF, Cube444BF, Cube555BF:
+		if len(in) < 3 {
+			return fmt.Errorf("该项目需要输入3个成绩")
+		}
+		if s.GetDNF() == 5 {
+			return nil
+		}
+		s.Result1, s.Result2, s.Result3 = in[0], in[1], in[2]
+		sort.Slice(in, func(i, j int) bool { return in[i] > in[j] })
+		s.Avg = (s.Result1 + s.Result2 + s.Result3) / 3
+		s.Best = in[0]
+		// 二个成绩
+	case Cube333MBF:
+		if len(in) < 2 {
+			return fmt.Errorf("该项目需要2个成绩")
+		}
+	}
+	return nil
+}
+
+func (s *Score) GetResult() []float64 {
 	return []float64{s.Result1, s.Result2, s.Result3, s.Result4, s.Result5}
 }
 
-func (s Score) GetBest() float64 {
-	return 0
-}
-
-func (s Score) GetAvg() float64 {
-	return 0
+func (s *Score) GetDNF() int {
+	dnf := 0
+	for _, val := range s.GetResult() {
+		if val == 0 {
+			dnf += 1
+		}
+	}
+	return dnf
 }

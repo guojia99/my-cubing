@@ -65,21 +65,22 @@
                                         <!--todo 加多一个事件监听选择事件-->
                                         <div class="input-group mb-3">
                                             <span class="input-group-text">选择比赛</span>
-                                            <select class="form-select" id="contest-select" aria-label="选择正在执行的比赛" onchange="syncContestScore(this)"></select>
+                                            <select class="form-select" id="contest-select" aria-label="选择正在执行的比赛" onload="syncContestScore(this)"
+                                                    onchange="syncContestScore(this)"></select>
                                         </div>
 
                                         <!--用户名输入-->
                                         <div class="input-group mb-3">
                                             <span class="input-group-text" id="score-input-username">用户名</span>
                                             <input class="form-control" list="user-datalistOptions" id="user-data-list-input" placeholder="用户名或用户id"
-                                                   aria-label="用户名或用户id" aria-describedby="score-input-username">
+                                                   aria-label="用户名或用户id" aria-describedby="score-input-username" onchange="syncScoresList()">
                                             <datalist id="user-datalistOptions"></datalist>
                                         </div>
 
                                         <!--项目选择-->
                                         <div class="input-group mb-3">
                                             <span class="input-group-text">选择项目</span>
-                                            <select class="form-select" id="project-select" aria-label="选择项目" onchange="syncProject(this)">
+                                            <select class="form-select" id="project-select" aria-label="选择项目" onclick="syncProject(this)" onload="syncProject(this)">
                                                 <option selected value="o_cola">速饮</option>
                                                 <option value="jhh">菊爆浩浩</option>
                                                 <option value="222">二阶</option>
@@ -107,27 +108,31 @@
                                         <div class="input-group mb-3">
                                             <div class="input-group mb-3">
                                                 <input id="input-score-number1-value" type="text" class="form-control" placeholder="输入第一轮成绩" aria-label="输入第一轮成绩"
-                                                       aria-describedby="input-score-number1" onchange="syncScores()">
+                                                       aria-describedby="input-score-number1" onchange="syncScoresInput()">
                                                 <span class="input-group-text" id="input-score-number1">轮次1</span>
                                             </div>
                                             <div class="input-group mb-3">
                                                 <input id="input-score-number2-value" type="text" class="form-control" placeholder="输入第二轮成绩" aria-label="输入第二轮成绩"
-                                                       aria-describedby="input-score-number2" onchange="syncScores()">
+                                                       aria-describedby="input-score-number2" onchange="syncScoresInput()">
                                                 <span class="input-group-text" id="input-score-number2">轮次2</span>
                                             </div>
                                             <div class="input-group mb-3">
+                                                <div class="form-text"> 多盲时请轮次1输入魔方数, 轮次2输入时间</div>
+                                            </div>
+
+                                            <div class="input-group mb-3">
                                                 <input id="input-score-number3-value" type="text" class="form-control" placeholder="输入第三轮成绩" aria-label="输入第三轮成绩"
-                                                       aria-describedby="input-score-number3" onchange="syncScores()">
+                                                       aria-describedby="input-score-number3" onchange="syncScoresInput()">
                                                 <span class="input-group-text" id="input-score-number3">轮次3</span>
                                             </div>
                                             <div class="input-group mb-3">
                                                 <input id="input-score-number4-value" type="text" class="form-control" placeholder="输入第四轮成绩" aria-label="输入第四轮成绩"
-                                                       aria-describedby="input-score-number4" onchange="syncScores()">
+                                                       aria-describedby="input-score-number4" onchange="syncScoresInput()">
                                                 <span class="input-group-text" id="input-score-number4">轮次4</span>
                                             </div>
                                             <div class="input-group mb-3">
                                                 <input id="input-score-number5-value" type="text" class="form-control" placeholder="输入第五轮成绩" aria-label="输入第五轮成绩"
-                                                       aria-describedby="input-score-number5" onchange="syncScores()">
+                                                       aria-describedby="input-score-number5" onchange="syncScoresInput()">
                                                 <span class="input-group-text" id="input-score-number5">轮次5</span>
                                             </div>
 
@@ -141,14 +146,7 @@
 
 
                                     <div class="col-5">
-                                        <ol class="list-group list-group-numbered">
-                                            <li class="list-group-item">2023/1/1 00:11:22 提交了 嘉的三阶成绩</li>
-                                            <li class="list-group-item">2023/1/1 00:11:22 提交了 嘉的三阶成绩</li>
-                                            <li class="list-group-item">2023/1/1 00:11:22 提交了 嘉的三阶成绩</li>
-                                            <li class="list-group-item">2023/1/1 00:11:22 提交了 嘉的三阶成绩</li>
-                                            <li class="list-group-item">2023/1/1 00:11:22 提交了 嘉的三阶成绩</li>
-                                            <li class="list-group-item">2023/1/1 00:11:22 提交了 嘉的三阶成绩</li>
-                                        </ol>
+                                        <ol class="list-group list-group-numbered" id="user-scores-list-group"></ol>
                                     </div>
 
                                 </div>
@@ -159,8 +157,25 @@
 
                         <!-- 添加比赛的tab -->
                         <div class="tab-pane fade" id="add-contest-tab-pane" role="tabpanel" aria-labelledby="add-user-tab" tabindex="0">
+                            <div class="mb-3">
+                                <label for="add-contest-input-name" class="form-label">名字</label>
+                                <input type="text" class="form-control" id="add-contest-input-name" aria-describedby="add-contest-input-name-help">
+                                <div id="add-contest-input-name-help" class="form-text">输入比赛名称, 名称全局唯一</div>
+                            </div>
 
+                            <div class="mb-3">
+                                <label for="add-contest-input-description" class="form-label">描述</label>
+                                <input type="text" class="form-control" id="add-contest-input-description" aria-describedby="add-contest-input-description-help">
+                                <div id="add-contest-input-description-help" class="form-text">比赛描述</div>
+                            </div>
 
+                            <div class="mb-3">
+                                <button type="submit" class="btn btn-primary" id="add-contest-input-submit" onclick="submitContest()">提交</button>
+                            </div>
+
+                            <div class="mb-3">
+                                <ol class="list-group list-group-numbered score_css_list-group" id="add-contest-tab-user-list"></ol>
+                            </div>
                         </div> <!-- 添加比赛的tab -->
 
                         <!-- 添加用户的tab -->
@@ -178,11 +193,11 @@
                             </div>
 
                             <div class="mb-3">
-                                <button type="submit" class="btn btn-primary" id="add-user-input-submit" onclick="submitPlayers()">修改选手</button>
+                                <button type="submit" class="btn btn-primary" id="add-user-input-submit" onclick="submitPlayers()">提交选手</button>
                             </div>
 
                             <div class="mb-3">
-                                <ol class="list-group list-group-numbered" id="add-user-tab-user-list"></ol>
+                                <ol class="list-group list-group-numbered score_css_list-group" id="add-user-tab-user-list"></ol>
                             </div>
                         </div> <!-- 添加用户的tab -->
                     </div>

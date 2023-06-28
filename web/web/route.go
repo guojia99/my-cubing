@@ -24,7 +24,11 @@ func AddWebRoute(e *gin.Engine) {
 	e.Static("/js", staticJsPath)
 
 	e.StaticFile("/favicon.ico", staticIconPath)
-	e.StaticFile("/", path.Join(staticHtmlPath, "report.html"))
-	e.StaticFile("/score", path.Join(staticHtmlPath, "score.html"))   // 成绩记录页
-	e.StaticFile("/report", path.Join(staticHtmlPath, "report.html")) // 报告页
+
+	e.StaticFile("/score", path.Join(staticHtmlPath, "score.html")) // 成绩记录页
+
+	e.StaticFile("/", path.Join(staticHtmlPath, "index.html"))          // 主页
+	e.StaticFile("/contest", path.Join(staticHtmlPath, "contest.html")) // 比赛页
+	e.StaticFile("/report", path.Join(staticHtmlPath, "report.html"))   // 报告页
+	e.StaticFile("/player", path.Join(staticHtmlPath, "player.html"))   // 个人成绩页
 }

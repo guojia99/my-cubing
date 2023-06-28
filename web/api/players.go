@@ -7,9 +7,11 @@
 package api
 
 import (
-	"github.com/gin-gonic/gin"
-	"my-cubing/db"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+
+	"my-cubing/db"
 )
 
 type (
@@ -40,12 +42,22 @@ func CreatePlayer(ctx *gin.Context) {
 		return
 	}
 
-	p := &db.Player{
+	var p *db.Player
+	if err := db.DB.Model(&db.Player{}).Where("name = ?", req.Name).First(&p).Error; err == nil {
+		p.WcaID = req.WcaID
+		if err = db.DB.Save(&p).Error; err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		} else {
+			ctx.JSON(http.StatusOK, CreatePlayerResponse{ID: p.ID})
+		}
+		return
+	}
+
+	p = &db.Player{
 		Name:  req.Name,
 		WcaID: req.WcaID,
 	}
 	err := db.DB.Create(p).Error
-
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
 		return
