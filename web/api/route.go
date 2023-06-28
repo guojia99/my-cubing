@@ -35,14 +35,15 @@ func AddApiRoute(route *gin.RouterGroup) {
 		// 成绩
 		score := api.Group("/score")
 		{
-			score.POST("/user/:user_id/contest/:contest_id", CreateScore)   // 上传成绩
-			score.DELETE("/user/:user_id/contest/:contest_id", DeleteScore) // 移除成绩
+			score.GET("/player/:player_name/contest/:contest_id", GetUserContestScore) // 获取某个选手某场成绩
+			score.POST("/", CreateScore)                                               // 上传成绩
+			score.DELETE("/", DeleteScore)                                             // 移除成绩
 		}
 
 		// 统计报表
-		report := score.GET("/report")
+		report := score.Group("/report")
 		{
-			report.GET("/user/:user_id", ReadReportByUser)           // 个人成绩统计
+			report.GET("/player/:user_name", ReadReportByUser)       // 个人成绩统计
 			report.GET("/contests/:contest_id", ReadReportByContest) // 某比赛成绩统计
 			report.GET("/best", ReadReportBest)                      // 所有项目的最佳成绩总排名积分
 			report.GET("/best/:project", ReadReportByProjectBest)    // 某项目的最佳成绩统计

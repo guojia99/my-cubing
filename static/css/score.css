@@ -4,3 +4,15 @@
  *  * Author: guojia(https://github.com/guojia99)
  */
 
+
+.score_css_list-group {
+    max-height: 50vh;
+    overflow-y: scroll;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    display: block;
+}
+
+.score_css_list-group::-webkit-scrollbar {
+    display: none;
+}

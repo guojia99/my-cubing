@@ -9,6 +9,7 @@ let projectValue = ""
 let contestValue = ""
 let contestsList = []
 let playerList = []
+let scoreList = []
 
 function enableInputScoreNumber(numbers) {
     for (let i = 1; i < 6; i++) {
@@ -40,27 +41,30 @@ function validateTimeFormat(time) {
 }
 
 function parseTimeToSeconds(time) {
-    if (time === 'DNF') {
-        return -1;
-    }
-    // 解析纯秒数格式
-    if (/^\d+(\.\d+)?$/.test(time)) {
-        return parseFloat(time);
-    }
-    // 解析分+秒格式
-    if (/^\d{1,2}[:：]\d{2}(\.\d+)?$/.test(time)) {
-        const [minutes, seconds] = time.split(/[:：]/);
-        return parseFloat(minutes) * 60 + parseFloat(seconds);
-    }
-    // 解析时+分+秒格式
-    if (/^\d{1,2}[:：]\d{2}[:：]\d{2}(\.\d+)?$/.test(time)) {
-        const [hours, minutes, seconds] = time.split(/[:：]/);
-        return parseFloat(hours) * 3600 + parseFloat(minutes) * 60 + parseFloat(seconds);
-    }
-    return -1;
+    const data = function (time) {
+        if (time === 'DNF') {
+            return 0;
+        }
+        // 解析纯秒数格式
+        if (/^\d+(\.\d+)?$/.test(time)) {
+            return parseFloat(time);
+        }
+        // 解析分+秒格式
+        if (/^\d{1,2}[:：]\d{2}(\.\d+)?$/.test(time)) {
+            const [minutes, seconds] = time.split(/[:：]/);
+            return parseFloat(minutes) * 60 + parseFloat(seconds);
+        }
+        // 解析时+分+秒格式
+        if (/^\d{1,2}[:：]\d{2}[:：]\d{2}(\.\d+)?$/.test(time)) {
+            const [hours, minutes, seconds] = time.split(/[:：]/);
+            return parseFloat(hours) * 3600 + parseFloat(minutes) * 60 + parseFloat(seconds);
+        }
+        return 0;
+    }(time)
+    return parseFloat(data)
 }
 
-function syncScores() {
+function syncScoresInput() {
     // 将所有的输入框确认
     for (let i = 1; i < 6; i++) {
         let value = $("#input-score-number" + `${i}-value`)
@@ -91,9 +95,34 @@ function syncScores() {
     submit.addClass("btn-success")
 }
 
+function syncScoresList() {
+    if ($("#contest-select").val() === "") {
+        return
+    }
+    if ($("#user-data-list-input").val() === "") {
+        return
+    }
+    $.ajax({
+        url: `./../api/score/player/${$("#user-data-list-input").val()}/contest/${$("#contest-select").val()}`, type: "GET", async: false, dataType: "json", timeout: 5000, // 设置超时时间为 5000 毫秒 (5 秒)
+        contentType: "application/json; charset=UTF-8", success: function (response) {
+            let group = $("#user-scores-list-group")
+            group.empty()
+            for (let i = 0; i < response["data"].length; i++) {
+                let data = response["data"][i]
+                let result = [data["R1"], data["R2"], data["R3"], data["R4"], data["R5"]]
+                group.append(`<li class="list-group-item">${data['Project']} 成绩 ${result} </li>`)
+            }
+        }, error: function (data, status) {
+            console.log(data, status)
+        }
+    })
+}
 
 function syncProject(select) {
     projectValue = select.options[select.selectedIndex].value
+    if (projectValue === ""){
+        return
+    }
 
     // 更新 disabled
     switch (projectValue) {
@@ -101,7 +130,6 @@ function syncProject(select) {
         case "333bf":
         case "444bf":
         case "555bf":
-        case "333mbf":
         case "666":
         case "777":
             console.log("只有三个的项目", projectValue);
@@ -112,29 +140,59 @@ function syncProject(select) {
             console.log("只有一轮的项目", projectValue);
             enableInputScoreNumber([1]);
             break
+        case "333mbf":
+            console.log("只有两的项目", projectValue);
+            enableInputScoreNumber([1, 2]);
+            break
         default:
             enableInputScoreNumber([1, 2, 3, 4, 5]);
             break
     }
-    syncScores()
+    syncScoresInput()
 }
 
 
 function submitScores() {
-    console.log(111)
+    const result = [];
+    let input1 = $("#input-score-number1-value")
+    let input2 = $("#input-score-number2-value")
+    let input3 = $("#input-score-number3-value")
+    let input4 = $("#input-score-number4-value")
+    let input5 = $("#input-score-number5-value")
+
+    const data = {
+        "PlayerName": $("#user-data-list-input").val(),
+        "ContestID": parseInt($("#contest-select").val()),
+        "RouteNumber": 1,
+        "ProjectName": $("#project-select").val(),
+        "Results": [parseTimeToSeconds(input1.val()), parseTimeToSeconds(input2.val()), parseTimeToSeconds(input3.val()), parseTimeToSeconds(input4.val()), parseTimeToSeconds(input5.val()),],
+    }
+    console.log(data)
+
+    $.ajax({
+        url: "./../api/score", type: "POST", async: false, dataType: "json", timeout: 5000, // 设置超时时间为 5000 毫秒 (5 秒)
+        data: JSON.stringify(data), contentType: "application/json; charset=UTF-8", success: function (response) {
+            alert("成功记录")
+            input1.val("")
+            input2.val("")
+            input3.val("")
+            input4.val("")
+            input5.val("")
+            syncByTabScore()
+            syncScoresList()
+        }, error: function (data, status) {
+            alert(`记录失败 ${data} ${status}`)
+        }
+    })
 }
 
 
 function syncAllData() {
     $.ajax({
-        url: "./../api/contests",
-        type: 'GET',
-        async: false,
-        timeout: 5000, // 设置超时时间为 5000 毫秒 (5 秒)
+        url: "./../api/contests", type: 'GET', async: false, timeout: 5000, // 设置超时时间为 5000 毫秒 (5 秒)
         success: function (response) {
             contestsList = response["Contests"]
-        },
-        error: function (xhr, status, error) {
+        }, error: function (xhr, status, error) {
             if (status === 'timeout') {
                 console.error('请求超时');
             } else {
@@ -144,14 +202,10 @@ function syncAllData() {
     });
 
     $.ajax({
-        url: "./../api/players",
-        type: 'GET',
-        async: false,
-        timeout: 5000, // 设置超时时间为 5000 毫秒 (5 秒)
+        url: "./../api/players", type: 'GET', async: false, timeout: 5000, // 设置超时时间为 5000 毫秒 (5 秒)
         success: function (response) {
             playerList = response["Data"]
-        },
-        error: function (xhr, status, error) {
+        }, error: function (xhr, status, error) {
             if (status === 'timeout') {
                 console.error('请求超时');
             } else {
@@ -165,24 +219,24 @@ function syncAllData() {
 function syncByTabScore() {
     syncAllData()
     // 同步比赛成绩
-   if (contestsList != null){
-       const contestSelect = $('#contest-select')
-       contestSelect.empty()
-       for (let i = 0; i < contestsList.length; i++) {
-           const contest = contestsList[i]
-           const currentTime = Math.floor(Date.now() / 1000); // 获取当前时间的秒级时间戳
-           if (currentTime >= contest["StartTime"] && currentTime <= contest["EndTime"]) {
-               const option = `<option value="${contest["ID"]}"> ${contest["Name"]} </option>`
-               contestSelect.append(option)
-           }
-       }
-   }
+    if (contestsList != null) {
+        const contestSelect = $('#contest-select')
+        contestSelect.empty()
+        for (let i = 0; i < contestsList.length; i++) {
+            const contest = contestsList[i]
+            const currentTime = Math.floor(Date.now() / 1000); // 获取当前时间的秒级时间戳
+            if (currentTime >= contest["StartTime"] && currentTime <= contest["EndTime"]) {
+                const option = `<option value="${contest["ID"]}"> ${contest["Name"]} </option>`
+                contestSelect.append(option)
+            }
+        }
+    }
 
     // 同步用户信息
-    if (playerList != null){
+    if (playerList != null) {
         const playerSelect = $('#user-datalistOptions')
         playerSelect.empty()
-        for (let i = 0; i < playerList.length;i++) {
+        for (let i = 0; i < playerList.length; i++) {
             const player = playerList[i]
             const option = `<option value="${player["Name"]}" id="player_${player["ID"]}">${player["ID"]} - ${player["WcaId"]}</option>`
             playerSelect.append(option)
@@ -193,66 +247,82 @@ function syncByTabScore() {
 // syncByTabScore 选择添加比赛时需要同步数据
 function syncByTabContest() {
     syncAllData()
+    if (contestsList != null) {
+        const contestTabList = $("#add-contest-tab-user-list")
+        contestTabList.empty()
+        for (let i = 0; i < contestsList.length; i++) {
+            const contest = contestsList[i]
+            contestTabList.append(`<li class='list-group-item'> ${contest["Name"]}</li>`)
+        }
+    }
 }
 
 function syncContestScore(select) {
     contestValue = select.options[select.selectedIndex].value
 }
 
-
-function syncByTabPlayer(){
+function syncByTabPlayer() {
     syncAllData()
 
     const playerTabList = $("#add-user-tab-user-list")
     playerTabList.empty()
-    if (playerList != null){
-        for (let i = 1; i < playerList.length; i++){
+    if (playerList != null) {
+        for (let i = 0; i < playerList.length; i++) {
             const player = playerList[i]
 
             let wcaId = player["WcaId"]
-            if (wcaId === ""){
-                wcaId = "无Wca id"
+            if (wcaId === "") {
+                wcaId = "无WcaID"
             }
             playerTabList.append(`<li class='list-group-item'> ${player["Name"]}( ${wcaId} )</li>`)
         }
     }
 }
 
-function submitPlayers(){
-    const name = $("#add-user-input-name")
+function submitContest(){
+    const name = $("#add-contest-input-name")
+    const description = $("#add-contest-input-description")
     if (name.val() === ""){
+        alert("比赛名不能为空")
+        return
+    }
+
+    $.ajax({
+        url: "./../api/contests", type: 'POST', data: {
+            "Name": name.val(),
+            "Description": description.val()
+        }, async: false, timeout: 5000, // 设置超时时间为 5000 毫秒 (5 秒)
+        success: function (response) {
+            name.val("")
+            description.val("")
+            alert("修改或创建成功");
+            syncByTabContest()
+        }, error: function (xhr, status, error) {
+            alert(`创建失败 ${error} \n${xhr} \n${status}`)
+        }
+    });
+}
+
+function submitPlayers() {
+    const name = $("#add-user-input-name")
+    if (name.val() === "") {
         alert("名字不能为空")
         return
     }
-    if (playerList != null){
-        for (let i = 0; i < playerList.length;i++){
-            if (playerList[i]["Name"] === name.val()){
-                alert("名字已存在")
-                return
-            }
-        }
-    }
-
 
     const wcaId = $("#add-user-input-wca_id")
 
     $.ajax({
-        url: "./../api/players",
-        type: 'POST',
-        data: {
-            "Name": name.val(),
-            "WcaID": wcaId.val()
-        },
-        async: false,
-        timeout: 5000, // 设置超时时间为 5000 毫秒 (5 秒)
+        url: "./../api/players", type: 'POST', data: {
+            "Name": name.val(), "WcaID": wcaId.val()
+        }, async: false, timeout: 5000, // 设置超时时间为 5000 毫秒 (5 秒)
         success: function (response) {
             name.val("")
             wcaId.val("")
-            alert("创建成功");
+            alert("修改或创建成功");
             syncByTabPlayer()
-        },
-        error: function (xhr, status, error) {
-            alert(`创建失败 ${error}`)
+        }, error: function (xhr, status, error) {
+            alert(`创建失败 ${error} \n${xhr} \n${status}`)
         }
     });
 }

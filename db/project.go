@@ -6,8 +6,10 @@
 
 package db
 
+import "fmt"
+
 func StrToProject(str string) Project {
-	for key, val := range cubeProjectCnCode {
+	for key, val := range cubeProjectEnCode {
 		if val == str {
 			return key
 		}
@@ -28,6 +30,10 @@ func (p Project) String() string {
 
 func (p Project) Cn() string {
 	return cubeProjectCnCode[p]
+}
+
+func (p Project) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf("\"%s\"", p.Cn())), nil
 }
 
 const (
