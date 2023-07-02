@@ -14,12 +14,6 @@
 
 
     <link rel="stylesheet" href="../css/score.css">
-    <!--    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/js/bootstrap.esm.min.js"></script>-->
-    <!--    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/js/bootstrap.bundle.min.js"></script>-->
-
-    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/js/bootstrap.min.js"></script>
-    <!--    <script src="https://cdn.bootcdn.net/ajax/libs/bootstrap-select/1.12.2/js/bootstrap-select.min.js"></script>-->
 </head>
 <body>
 
@@ -157,47 +151,56 @@
 
                         <!-- 添加比赛的tab -->
                         <div class="tab-pane fade" id="add-contest-tab-pane" role="tabpanel" aria-labelledby="add-user-tab" tabindex="0">
-                            <div class="mb-3">
-                                <label for="add-contest-input-name" class="form-label">名字</label>
-                                <input type="text" class="form-control" id="add-contest-input-name" aria-describedby="add-contest-input-name-help">
-                                <div id="add-contest-input-name-help" class="form-text">输入比赛名称, 名称全局唯一</div>
-                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="add-contest-input-name" class="form-label">名字</label>
+                                        <input type="text" class="form-control" id="add-contest-input-name" aria-describedby="add-contest-input-name-help">
+                                        <div id="add-contest-input-name-help" class="form-text">输入比赛名称, 名称全局唯一</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="add-contest-input-description" class="form-label">描述</label>
+                                        <input type="text" class="form-control" id="add-contest-input-description" aria-describedby="add-contest-input-description-help">
+                                        <div id="add-contest-input-description-help" class="form-text">比赛描述</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <button type="submit" class="btn btn-primary" id="add-contest-input-submit" onclick="submitContest()">提交</button>
+                                    </div>
+                                </div>
 
-                            <div class="mb-3">
-                                <label for="add-contest-input-description" class="form-label">描述</label>
-                                <input type="text" class="form-control" id="add-contest-input-description" aria-describedby="add-contest-input-description-help">
-                                <div id="add-contest-input-description-help" class="form-text">比赛描述</div>
-                            </div>
-
-                            <div class="mb-3">
-                                <button type="submit" class="btn btn-primary" id="add-contest-input-submit" onclick="submitContest()">提交</button>
-                            </div>
-
-                            <div class="mb-3">
-                                <ol class="list-group list-group-numbered score_css_list-group" id="add-contest-tab-user-list"></ol>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <ol class="list-group list-group-numbered score_css_list-group" id="add-contest-tab-user-list"></ol>
+                                    </div>
+                                </div>
                             </div>
                         </div> <!-- 添加比赛的tab -->
 
                         <!-- 添加用户的tab -->
                         <div class="tab-pane fade" id="add-user-tab-pane" role="tabpanel" aria-labelledby="add-user-tab" tabindex="0">
-                            <div class="mb-3">
-                                <label for="add-user-input-name" class="form-label">名字</label>
-                                <input type="text" class="form-control" id="add-user-input-name" aria-describedby="add-user-input-name-help">
-                                <div id="add-user-input-name-help" class="form-text">输入用户的名字, 名字全局唯一，如有冲突请进行修改</div>
-                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="add-user-input-name" class="form-label">名字</label>
+                                        <input type="text" class="form-control" id="add-user-input-name" aria-describedby="add-user-input-name-help">
+                                        <div id="add-user-input-name-help" class="form-text">输入用户的名字, 名字全局唯一，如有冲突请进行修改</div>
+                                    </div>
 
-                            <div class="mb-3">
-                                <label for="add-user-input-wca_id" class="form-label">WCA ID</label>
-                                <input type="text" class="form-control" id="add-user-input-wca_id" aria-describedby="add-user-input-wca_id-help">
-                                <div id="add-user-input-wca_id-help" class="form-text">WCA ID， 请按真实的WCA ID修改</div>
-                            </div>
+                                    <div class="mb-3">
+                                        <label for="add-user-input-wca_id" class="form-label">WCA ID</label>
+                                        <input type="text" class="form-control" id="add-user-input-wca_id" aria-describedby="add-user-input-wca_id-help">
+                                        <div id="add-user-input-wca_id-help" class="form-text">WCA ID， 请按真实的WCA ID修改</div>
+                                    </div>
 
-                            <div class="mb-3">
-                                <button type="submit" class="btn btn-primary" id="add-user-input-submit" onclick="submitPlayers()">提交选手</button>
-                            </div>
-
-                            <div class="mb-3">
-                                <ol class="list-group list-group-numbered score_css_list-group" id="add-user-tab-user-list"></ol>
+                                    <div class="mb-3">
+                                        <button type="submit" class="btn btn-primary" id="add-user-input-submit" onclick="submitPlayers()">提交选手</button>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <ol class="list-group list-group-numbered score_css_list-group" id="add-user-tab-user-list"></ol>
+                                    </div>
+                                </div>
                             </div>
                         </div> <!-- 添加用户的tab -->
                     </div>
@@ -208,6 +211,6 @@
     </div>
 </div>
 
-<script src="../js/score.js"></script>
+<script src="../js/score_admin.js"></script>
 </body>
 </html>

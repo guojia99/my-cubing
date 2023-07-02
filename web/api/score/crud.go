@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2023 guojia99 All rights reserved.
- * Created: 2023/6/22 下午6:41.
- * Author:  guojia(https://github.com/guojia99)
+ *  * Copyright (c) 2023 guojia99 All rights reserved.
+ *  * Created: 2023/7/1 下午3:40.
+ *  * Author: guojia(https://github.com/guojia99)
  */
 
-package api
+package score
 
 import (
 	"fmt"
@@ -15,11 +15,6 @@ import (
 
 	"my-cubing/db"
 )
-
-type GetUserContestScoreRequest struct {
-	PlayerName string `uri:"player_name"`
-	ContestID  uint   `uri:"contest_id"`
-}
 
 func GetUserContestScore(ctx *gin.Context) {
 	var req GetUserContestScoreRequest
@@ -35,18 +30,9 @@ func GetUserContestScore(ctx *gin.Context) {
 	}
 
 	var scores []db.Score
-	db.DB.Model(&db.Score{}).Where("player_id = ?", p.ID).
-		Where("contest_id = ?", req.ContestID).Find(&scores)
-
+	db.DB.Model(&db.Score{}).Where("player_id = ?", p.ID).Where("contest_id = ?", req.ContestID).Find(&scores)
 	ctx.JSON(http.StatusOK, gin.H{"data": scores})
-}
-
-type CreateScoreRequest struct {
-	PlayerName  string    `json:"PlayerName"`
-	ContestID   uint      `json:"ContestID"`
-	RouteNumber uint      `json:"RouteNumber"`
-	ProjectName string    `json:"ProjectName"`
-	Results     []float64 `json:"Results"`
+	fmt.Println(scores)
 }
 
 func CreateScore(ctx *gin.Context) {

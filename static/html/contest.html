@@ -8,24 +8,40 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>魔缘群赛系统</title>
+    <title>比赛</title>
     <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/css/bootstrap.min.css" rel="stylesheet">
 
-    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/js/bootstrap.min.js"></script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap-icons/1.10.4/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/bootstrap-select/1.12.2/css/bootstrap-select.min.css">
+
+
 </head>
 <body>
-<div class="container text-center">
-    <div>
-        <button type="button" class="btn btn-outline-primary">Primary</button>
-        <button type="button" class="btn btn-outline-secondary">Secondary</button>
-        <button type="button" class="btn btn-outline-success">Success</button>
-        <button type="button" class="btn btn-outline-danger">Danger</button>
-        <button type="button" class="btn btn-outline-warning">Warning</button>
-        <button type="button" class="btn btn-outline-info">Info</button>
-        <button type="button" class="btn btn-outline-light">Light</button>
-        <button type="button" class="btn btn-outline-dark">Dark</button>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h3 class="text-center" style="margin-top: 30px">
+                <p id="contest_name"></p>
+            </h3>
+        </div>
+    </div>
+
+
+    <div class="row">
+        <div class="col-md-12" id="all_project_body"></div>
     </div>
 </div>
+
+<script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/js/bootstrap.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+<script src="../js/contest.js"></script>
+
+<script>
+    (function () {
+        syncContest()
+    })();
+</script>
+
 </body>
 </html>
+

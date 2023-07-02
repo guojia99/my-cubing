@@ -14,23 +14,23 @@ import (
 
 // Score 成绩表
 type Score struct {
-	ID        uint      `gorm:"primaryKey;column:id"`
-	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at"`
-
-	// 这里的设计是
-	// 一次复原成绩记录一条
-	PlayerID    uint `json:"PlayerID" gorm:"index;not null;column:player_id"`   // 选手的ID
-	ContestID   uint `json:"ContestID" gorm:"index;not null;column:contest_id"` // 比赛的ID
-	RouteNumber uint `json:"RouteNumber" gorm:"not null;column:route_number"`   // 该项目的轮次
-
-	Project Project `json:"Project" gorm:"not null;column:project"` // 分项目 333/222/444等
-	Result1 float64 `json:"R1" gorm:"column:r1;NULL"`               // 成绩1
-	Result2 float64 `json:"R2" gorm:"column:r2;NULL"`               // 成绩2
-	Result3 float64 `json:"R3" gorm:"column:r3;NULL"`               // 成绩3
-	Result4 float64 `json:"R4" gorm:"column:r4;NULL"`               // 成绩4
-	Result5 float64 `json:"R5" gorm:"column:r5;NULL"`               // 成绩5
-	Best    float64 `json:"Best" gorm:"column:best;NULL"`           // 五把最好成绩
-	Avg     float64 `json:"Avg" gorm:"column:avg;NULL"`             // 五把平均成绩
+	ID           uint      `gorm:"primaryKey;column:id"`
+	CreatedAt    time.Time `gorm:"autoCreateTime;column:created_at"`
+	PlayerID     uint      `json:"PlayerID" gorm:"index;not null;column:player_id"`   // 选手的ID
+	ContestID    uint      `json:"ContestID" gorm:"index;not null;column:contest_id"` // 比赛的ID
+	RouteNumber  uint      `json:"RouteNumber" gorm:"not null;column:route_number"`   // 该项目的轮次
+	Project      Project   `json:"Project" gorm:"not null;column:project"`            // 分项目 333/222/444等
+	Result1      float64   `json:"R1" gorm:"column:r1;NULL"`                          // 成绩1
+	Result2      float64   `json:"R2" gorm:"column:r2;NULL"`                          // 成绩2
+	Result3      float64   `json:"R3" gorm:"column:r3;NULL"`                          // 成绩3
+	Result4      float64   `json:"R4" gorm:"column:r4;NULL"`                          // 成绩4
+	Result5      float64   `json:"R5" gorm:"column:r5;NULL"`                          // 成绩5
+	Best         float64   `json:"Best" gorm:"column:best;NULL"`                      // 五把最好成绩
+	Avg          float64   `json:"Avg" gorm:"column:avg;NULL"`                        // 五把平均成绩
+	IsBest       bool      `json:"IsBest" grom:"column:is_best;NULL"`                 // 这是比往期最佳的还好的成绩
+	IsBestAvg    bool      `json:"IsBestAvg" grom:"column:is_best_avg;NULL"`          // 这是比往期最佳的成绩还好的平均成绩
+	IsBestRecord bool      `json:"BestRecord" gorm:"column:is_best_record;NULL"`      // 打破了以往的最佳记录
+	IsAvgRecord  bool      `json:"AvgRecord" gorm:"column:is_avg_record;NULL"`        // 打破了以往的平均记录
 }
 
 func (s *Score) SetResult(in []float64) error {

@@ -25,10 +25,9 @@ func AddWebRoute(e *gin.Engine) {
 
 	e.StaticFile("/favicon.ico", staticIconPath)
 
-	e.StaticFile("/score", path.Join(staticHtmlPath, "score.html")) // 成绩记录页
+	e.StaticFile("/admin/score", path.Join(staticHtmlPath, "score_admin.html")) // 成绩记录页
 
-	e.StaticFile("/", path.Join(staticHtmlPath, "index.html"))          // 主页
-	e.StaticFile("/contest", path.Join(staticHtmlPath, "contest.html")) // 比赛页
-	e.StaticFile("/report", path.Join(staticHtmlPath, "report.html"))   // 报告页
-	e.StaticFile("/player", path.Join(staticHtmlPath, "player.html"))   // 个人成绩页
+	e.StaticFile("/", path.Join(staticHtmlPath, "index.html"))           // 主页
+	e.StaticFile("/score", path.Join(staticHtmlPath, "best_score.html")) // 所有项目汇总主页
+	e.StaticFile("/contest", path.Join(staticHtmlPath, "contest.html"))  // 所有比赛的展示
 }
