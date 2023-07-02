@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>最佳成绩汇总</title>
+
+    <meta name="description" content="Source code generated using layoutit.com">
+    <meta name="author" content="LayoutIt!">
+
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/css/bootstrap.min.css" rel="stylesheet">
+
+</head>
+<body>
+
+
+<div class="container-fluid" style="margin-top: 30px">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="row">
+                <div class="col-md-12">
+                    <h3 class="text-center">最佳成绩</h3>
+                    <table class="table table-bordered table-striped" style="text-align:center">
+                        <caption>群R：各个项目最佳排名</caption>
+                        <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col" colspan="2">单次</th>
+                            <th scope="col" colspan="2">平均</th>
+                        </tr>
+                        </thead>
+                        <tbody id="best_table_body"></tbody>
+                    </table>
+                    <h3 class="text-center">排名总和</h3>
+                    <table class="table table-bordered table-striped" style="text-align:center">
+                        <caption>群总成绩排名汇总： 各个项目在群总排名的成绩</caption>
+                        <thead>
+                        <tr>
+                            <th>排名</th>
+                            <th scope="col" colspan="2">单次</th>
+                            <th scope="col" colspan="2">平均</th>
+                            <th>排名</th>
+                        </tr>
+                        </thead>
+                        <tbody id="sor_table_body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+
+            <div class="row" id="all_project_body">
+<!--                <div class="col-md-6" id="all_project_1"></div>-->
+<!--                <div class="col-md-6" id="all_project_2"></div>-->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/js/bootstrap.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+
+
+<script src="../js/best_score.js"></script>
+<script>
+    (function () {
+        syncAllProjectBestScores()
+        syncSorScores()
+        syncAllProjectScores()
+
+    })();
+</script>
+
+</body>
+</html>

@@ -22,6 +22,30 @@ func StrToProject(str string) Project {
 	return 0
 }
 
+func ProjectList() []Project {
+	return []Project{
+		Cube222,
+		Cube333,
+		Cube444,
+		Cube555,
+		Cube666,
+		Cube777,
+		CubeSk,
+		CubePy,
+		CubeSq1,
+		CubeMinx,
+		CubeClock,
+		Cube333OH,
+		Cube333FM,
+		Cube333BF,
+		Cube444BF,
+		Cube555BF,
+		Cube333MBF,
+		JuBaoHaoHao,
+		OtherCola,
+	}
+}
+
 type Project int
 
 func (p Project) String() string {
@@ -37,8 +61,7 @@ func (p Project) MarshalJSON() ([]byte, error) {
 }
 
 const (
-	JuBaoHaoHao Project = iota + 1
-	Cube222
+	Cube222 Project = iota + 1
 	Cube333
 	Cube444
 	Cube555
@@ -55,7 +78,7 @@ const (
 	Cube444BF
 	Cube555BF
 	Cube333MBF
-
+	JuBaoHaoHao
 	OtherCola
 )
 

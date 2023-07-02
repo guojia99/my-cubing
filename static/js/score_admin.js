@@ -103,8 +103,14 @@ function syncScoresList() {
         return
     }
     $.ajax({
-        url: `./../api/score/player/${$("#user-data-list-input").val()}/contest/${$("#contest-select").val()}`, type: "GET", async: false, dataType: "json", timeout: 5000, // 设置超时时间为 5000 毫秒 (5 秒)
+        url: `./../api/score/player/${$("#user-data-list-input").val()}/contest/${$("#contest-select").val()}`,
+        type: "GET",
+        async: false,
+        dataType: "json",
+        timeout: 5000, // 设置超时时间为 5000 毫秒 (5 秒)
         contentType: "application/json; charset=UTF-8", success: function (response) {
+            console.log(response)
+            console.log(111)
             let group = $("#user-scores-list-group")
             group.empty()
             for (let i = 0; i < response["data"].length; i++) {
@@ -224,11 +230,13 @@ function syncByTabScore() {
         contestSelect.empty()
         for (let i = 0; i < contestsList.length; i++) {
             const contest = contestsList[i]
-            const currentTime = Math.floor(Date.now() / 1000); // 获取当前时间的秒级时间戳
-            if (currentTime >= contest["StartTime"] && currentTime <= contest["EndTime"]) {
-                const option = `<option value="${contest["ID"]}"> ${contest["Name"]} </option>`
-                contestSelect.append(option)
-            }
+            // const currentTime = Math.floor(Date.now() / 1000); // 获取当前时间的秒级时间戳
+            // if (currentTime >= contest["StartTime"] && currentTime <= contest["EndTime"]) {
+            //
+            // }
+            // 不做时间限制
+            const option = `<option value="${contest["ID"]}"> ${contest["Name"]} </option>`
+            contestSelect.append(option)
         }
     }
 
