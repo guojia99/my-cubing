@@ -25,8 +25,9 @@ type Contest struct {
 	Model
 
 	Name        string    `json:"Name" gorm:"unique;not null;column:name"`        // 比赛名
-	Content     string    `json:"ContestContent"`                                 // 比赛论次描述, 为 ContestRoutes 的结构体json化
+	Content     string    `json:"contest" gorm:"column:content;null"`             // 比赛论次描述, 为 ContestRoutes 的结构体json化
 	Description string    `json:"Description" gorm:"not null;column:description"` // 描述
+	IsEnd       bool      `json:"IsEnd" gorm:"null;column:is_end"`                // 是否已结束
 	StartTime   time.Time `json:"StartTime" gorm:"column:start_time"`             // 开始时间
 	EndTime     time.Time `json:"EndTime" gorm:"column:end_time"`                 // 结束时间
 }

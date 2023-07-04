@@ -13,15 +13,17 @@ import (
 )
 
 const (
-	staticHtmlPath = "./static/html/"
-	staticIconPath = "./static/favicon.ico"
-	staticCssPath  = "./static/css"
-	staticJsPath   = "./static/js"
+	staticHtmlPath  = "./static/html/"
+	staticIconPath  = "./static/favicon.ico"
+	staticCssPath   = "./static/css"
+	staticJsPath    = "./static/js"
+	staticImagePath = "./static/image/"
 )
 
 func AddWebRoute(e *gin.Engine) {
 	e.Static("/css", staticCssPath)
 	e.Static("/js", staticJsPath)
+	e.Static("/image", staticImagePath)
 
 	e.StaticFile("/favicon.ico", staticIconPath)
 

@@ -22,6 +22,107 @@ import (
 
 var caches = cache.NewLRUExpireCache(100)
 
+func GetUserContestScore(ctx *gin.Context) {
+	var req GetUserContestScoreRequest
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+
+	var p db.Player
+	if err := db.DB.First(&p, "name = ?", req.PlayerName).Error; err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+
+	var scores []db.Score
+	db.DB.Model(&db.Score{}).Where("player_id = ?", p.ID).Where("contest_id = ?", req.ContestID).Find(&scores)
+	ctx.JSON(http.StatusOK, gin.H{"data": scores})
+}
+
+func CreateScore(ctx *gin.Context) {
+	// 0. 确认入参是否有效
+	var req CreateScoreRequest
+	if err := ctx.Bind(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+	pj := db.StrToProject(req.ProjectName)
+	if pj == 0 {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "该项目类型错误"})
+		return
+	}
+
+	// 1. 查看比赛是否有效
+	var contest db.Contest
+	if err := db.DB.Where("id = ?", req.ContestID).First(&contest).Error; err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+	if contest.IsEnd {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "比赛已结束"})
+		return
+	}
+
+	// 2. 查看玩家是否存在，不存在创建一个
+	var p = db.Player{Name: req.PlayerName}
+	if err := db.DB.FirstOrCreate(&p, "name = ?", req.PlayerName).Error; err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+
+	// 3. 找到尝试找到本场比赛成绩, 找到就直接覆盖, 或者插入成绩
+	var score db.Score
+	err := db.DB.Model(&db.Score{}).
+		Where("player_id = ?", p.ID).Where("contest_id = ?", req.ContestID).
+		Where("route_number = ?", 1).Where("project = ?", pj).First(&score).Error
+
+	if err != nil || score.ID == 0 {
+		score = db.Score{
+			CreatedAt:   time.Now(),
+			PlayerID:    p.ID,
+			ContestID:   req.ContestID,
+			RouteNumber: req.RouteNumber,
+			Project:     db.StrToProject(req.ProjectName),
+		}
+	}
+	if err = score.SetResult(req.Results); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+	if err = db.DB.Save(&score).Error; err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"msg": "ok"})
+	// 4. 全D直接返回
+	if score.Best == 0 {
+		return
+	}
+
+	// 5. 判断是否是最佳成绩
+	var (
+		best    db.Score
+		bestAvg db.Score
+	)
+	// 查之前所有的成绩
+	if err = db.DB.Where("player_id = ?", p.ID).Where("project = ?", pj).Where("id != ?", score.ID).Order("dest").First(&best).Error; err != nil {
+		if best.Best > score.Best {
+			score.IsBest = true
+			db.DB.Save(&score)
+		}
+	}
+	if err = db.DB.Where("player_id = ?", p.ID).Where("project = ?", pj).Where("id != ?", score.ID).Order("avg").First(&bestAvg).Error; err != nil {
+		if score.Avg != 0 && bestAvg.Avg > score.Avg {
+			score.IsBestAvg = true
+			db.DB.Save(&score)
+		}
+	}
+}
+
+func DeleteScore(ctx *gin.Context) {}
+
 // GetAllProjectBestScore 获取所有成绩最佳
 func GetAllProjectBestScore(ctx *gin.Context) {
 	key := "GetAllProjectBestScore"
@@ -257,16 +358,8 @@ func GetContestScores(ctx *gin.Context) {
 		playerMap[player.Name] = GetContestScoresPlayer{Name: player.Name, Id: player.ID}
 
 		scoreCache[score.Project] = append(scoreCache[score.Project], GetContestScoresDetail{
-			Player:    player.Name,
-			Result1:   score.Result1,
-			Result2:   score.Result2,
-			Result3:   score.Result3,
-			Result4:   score.Result4,
-			Result5:   score.Result5,
-			Best:      score.Best,
-			Avg:       score.Avg,
-			IsBest:    score.IsBest,
-			IsBestAvg: score.IsBestAvg,
+			Player: player.Name,
+			Score:  score,
 		})
 	}
 
@@ -315,4 +408,9 @@ func GetContestScores(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, out)
+}
+
+// EndContestScore 结束一场比赛
+func EndContestScore(ctx *gin.Context) {
+
 }

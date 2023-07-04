@@ -66,7 +66,7 @@ func CreateContest(ctx *gin.Context) {
 
 func ReadContests(ctx *gin.Context) {
 	var contests []db.Contest
-	if err := db.DB.Model(&db.Contest{}).Find(&contests).Error; err != nil {
+	if err := db.DB.Model(&db.Contest{}).Order("created_at DESC").Find(&contests).Error; err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
 		return
 	}
