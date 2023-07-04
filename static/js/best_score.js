@@ -79,7 +79,6 @@ function syncAllProjectScores() {
                     continue
                 }
 
-
                 let tableBody = ""
                 for (let i = 0; i < maxLength; i++) {
 
@@ -143,7 +142,7 @@ function syncSorScores() {
             for (let i = 0; i < best.length; i++) {
                 tableBody.append(`
                 <tr>
-                    <td>${i}</td>
+                    <td>${i + 1}</td>
                     <td>${best[i]["Player"]}</td>
                     <td>${best[i]["Count"]}</td>
                     <td>${avg[i]["Count"]}</td>

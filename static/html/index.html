@@ -10,22 +10,83 @@
     <meta charset="UTF-8">
     <title>魔缘群赛系统</title>
     <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/css/bootstrap.min.css" rel="stylesheet">
-
-    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/js/bootstrap.min.js"></script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap-icons/1.10.4/font/bootstrap-icons.min.css" rel="stylesheet">
 </head>
 <body>
-<div class="container text-center">
-    <div>
-        <button type="button" class="btn btn-outline-primary">Primary</button>
-        <button type="button" class="btn btn-outline-secondary">Secondary</button>
-        <button type="button" class="btn btn-outline-success">Success</button>
-        <button type="button" class="btn btn-outline-danger">Danger</button>
-        <button type="button" class="btn btn-outline-warning">Warning</button>
-        <button type="button" class="btn btn-outline-info">Info</button>
-        <button type="button" class="btn btn-outline-light">Light</button>
-        <button type="button" class="btn btn-outline-dark">Dark</button>
+<div class="container-fluid">
+
+
+    <!--    导航-->
+    <div class="row" style="margin-top: 20px;">
+        <div class="col-md-1"></div>
+        <div class="col-md-10">
+            <ul class="nav">
+                <li class="nav-item"><a class="nav-link active" href="#">主页</a></li>
+                <li class="nav-item"><a class="nav-link" href="/score">最佳成绩汇总</a></li>
+                <li class="nav-item"><a class="nav-link disabled" href="#">待开发</a></li>
+            </ul>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+
+    <div class="row" style="margin-top: 20px;margin-bottom: 20px">
+        <div class="col-md-1"></div>
+        <div class="col-md-10">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="row">
+                        <div class="col-md-4" style="text-align: center">
+                            <img alt="魔缘二维码" src="../image/moyuan_qrcode.png" />
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card">
+                                <h5 class="card-header">魔缘群赛</h5>
+                                <div class="card-body">
+                                    <p class="card-text">添加QQ群参加群赛 532463339 </p>
+                                </div>
+                                <div class="card-footer"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="col-md-1">
+        </div>
+    </div>
+
+    <div class="row" style="margin-top: 10px">
+
+        <div class="col-md-1"> </div>
+        <div class="col-md-10" style="text-align: center">
+            <h3>查看往期比赛记录</h3>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th></th>
+                    <th>比赛</th>
+                    <th>状态</th>
+                    <th>时间</th>
+                    <th>前往</th>
+                </tr>
+                </thead>
+                <tbody id="contest_body"></tbody>
+            </table>
+        </div>
+        <div class="col-md-1"> </div>
     </div>
 </div>
+
+
+<script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/js/bootstrap.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+
+<script src="../js/index.js"></script>
+<script>
+    (function () {
+        syncContest()
+    })();
+</script>
 </body>
 </html>
