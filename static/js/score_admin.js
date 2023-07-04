@@ -224,17 +224,15 @@ function syncAllData() {
 // syncByTabScore 选择添加记录时需要同步的数据
 function syncByTabScore() {
     syncAllData()
-    // 同步比赛成绩
+    // 同步比赛
     if (contestsList != null) {
         const contestSelect = $('#contest-select')
         contestSelect.empty()
         for (let i = 0; i < contestsList.length; i++) {
             const contest = contestsList[i]
-            // const currentTime = Math.floor(Date.now() / 1000); // 获取当前时间的秒级时间戳
-            // if (currentTime >= contest["StartTime"] && currentTime <= contest["EndTime"]) {
-            //
-            // }
-            // 不做时间限制
+            if (contest["IsEnd"]){
+                continue
+            }
             const option = `<option value="${contest["ID"]}"> ${contest["Name"]} </option>`
             contestSelect.append(option)
         }
@@ -260,7 +258,8 @@ function syncByTabContest() {
         contestTabList.empty()
         for (let i = 0; i < contestsList.length; i++) {
             const contest = contestsList[i]
-            contestTabList.append(`<li class='list-group-item'> ${contest["Name"]}</li>`)
+            // todo 这里加结束比赛的按钮
+            contestTabList.append(`<li class='list-group-item'> ${contest["Name"]} </li>`)
         }
     }
 }

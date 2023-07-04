@@ -83,3 +83,9 @@ type (
 		Data        map[string][]GetContestScoresDetail `json:"Data"`
 	}
 )
+
+type (
+	EndContestScoreRequest struct {
+		ContestID uint `json:"ContestId"`
+	}
+)

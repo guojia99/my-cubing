@@ -412,5 +412,68 @@ func GetContestScores(ctx *gin.Context) {
 
 // EndContestScore 结束一场比赛
 func EndContestScore(ctx *gin.Context) {
+	var req EndContestScoreRequest
+	if err := ctx.BindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{})
+		return
+	}
+	var contest db.Contest
+	if err := db.DB.Where("id = ?", req.ContestID).First(&contest).Error; err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{})
+		return
+	}
 
+	// 1. 查所有的该场比赛成绩, 把最佳成绩统计出来, 查所有之前的比赛, 把以往最佳成绩统计出来
+	var (
+		thisContestBest = make(map[db.Project]db.Score)
+		thisContestAvg  = make(map[db.Project]db.Score)
+
+		oldContestBest = make(map[db.Project]db.Score)
+		oldContestAvg  = make(map[db.Project]db.Score)
+	)
+	for _, project := range db.ProjectList() {
+		var bestScore db.Score
+		if err := db.DB.Where("contest_id = ?", req.ContestID).Where("project = ?", project).Where("best != ?", 0).Order("best").First(&bestScore).Error; err == nil {
+			thisContestBest[project] = bestScore
+		}
+		var avgScore db.Score
+		if err := db.DB.Where("contest_id = ?", req.ContestID).Where("project = ?", project).Where("avg != ?", 0).Order("avg").First(&avgScore).Error; err == nil {
+			thisContestAvg[project] = avgScore
+		}
+
+		var oldBestScore db.Score
+		if err := db.DB.Where("contest_id != ?", req.ContestID).Where("project = ?", project).Where("best != ?", 0).Order("best").First(&oldBestScore).Error; err == nil {
+			oldContestBest[project] = oldBestScore
+		}
+		var oldAvgScore db.Score
+		if err := db.DB.Where("contest_id != ?", req.ContestID).Where("project = ?", project).Where("avg != ?", 0).Order("avg").First(&oldAvgScore).Error; err == nil {
+			oldContestAvg[project] = oldAvgScore
+		}
+	}
+
+	// 2. 循环所有当前的最佳记录
+	for key, score := range thisContestBest {
+		// 旧的成绩存在且新成绩差
+		if _, ok := oldContestBest[key]; ok && oldContestBest[key].Best < score.Best {
+			continue
+		}
+		// 不存在或新成绩好
+		score.IsBestRecord = true
+		db.DB.Save(&score)
+	}
+
+	for key, score := range thisContestAvg {
+		// 旧的成绩存在且新成绩差
+		if _, ok := oldContestAvg[key]; ok && oldContestAvg[key].Avg < score.Avg {
+			continue
+		}
+		// 不存在或新成绩好
+		score.IsAvgRecord = true
+		db.DB.Save(&score)
+	}
+
+	contest.IsEnd = true
+	contest.EndTime = time.Now()
+	db.DB.Save(&contest)
+	ctx.JSON(http.StatusOK, gin.H{"msg": "ok"})
 }

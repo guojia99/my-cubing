@@ -26,6 +26,7 @@ type (
 		Name        string            `json:"Name"`
 		Description string            `json:"Description"`
 		Routes      db.ContestContent `json:"Content"`
+		IsEnd       bool              `json:"IsEnd"`
 		StartTime   int64             `json:"StartTime"`
 		EndTime     int64             `json:"EndTime"`
 	}
