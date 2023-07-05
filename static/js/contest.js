@@ -1,3 +1,4 @@
+
 function getAllQueryParams() {
     const queryParams = {};
     const queryString = window.location.search.substring(1);
@@ -20,43 +21,8 @@ function getAllQueryParams() {
     return queryParams;
 }
 
-function formatTime(number) {
-
-    console.log(number)
-    let seconds = 0
-    try {
-        seconds = Number(number.toFixed(3));
-    } catch (e) {
-        seconds = 0
-    }
-    if (seconds === 0) {
-        return "DNF";
-    }
-
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const remainingSeconds = (seconds % 60).toFixed(2);
-
-    let formattedTime = "";
-    if (hours > 0) {
-        formattedTime += hours + ":";
-    }
-    if (minutes > 0) {
-        formattedTime += minutes;
-    }
-    if (hours === 0 && minutes === 0) {
-        formattedTime += remainingSeconds;
-    } else if (remainingSeconds !== "0.00") {
-        formattedTime += ":" + remainingSeconds;
-    }
-
-    return formattedTime;
-}
-
-
 
 function syncContest() {
-
     let params = getAllQueryParams()
     if (params["contest_id"] === undefined) {
         return
@@ -73,26 +39,16 @@ function syncContest() {
 
 
             for (let i = 0; i < response["ProjectList"].length; i++) {
-                let thBy23Project = `
-                            <th scope="col">还原2</th>
-                            <th scope="col">还原3</th>
-                    `
-                let thBy45Project = `
-                            <th scope="col">还原4</th>
-                            <th scope="col">还原5</th>
-                    `
+                let thBy23Project = `<th scope="col">还原2</th><th scope="col">还原3</th>`
+                let thBy45Project = ` <th scope="col">还原4</th><th scope="col">还原5</th>`
 
 
-                let project = response["ProjectList"][i];
-                let tableBody = ""
+                let project = response["ProjectList"][i], tableBody = ""
                 const data = response["Data"][project]
                 for (let j = 0; j < data.length; j++) {
-
-
-                    let bestStyle = ""
-                    let bestUpIcons = ""
+                    let bestStyle = "", bestUpIcons = ""
                     if (data[j]["IsBest"]) {
-                        bestUpIcons = ` <i class="bi bi-graph-up-arrow"></i>`
+                        bestUpIcons = `<i class="bi bi-graph-up-arrow"></i>`
                         bestStyle = "color:#dc3545;font-weight:bold"
                     }
 
@@ -106,13 +62,13 @@ function syncContest() {
 
                     // 这里为了区分多个三个的项目等
                     let trBy23Project = `
-                            <td>${formatTime(data[j]["R2"])}</td>
-                            <td>${formatTime(data[j]["R3"])}</td>
+                            <td>${formatTimeByProject(data[j]["R2"], project)}</td>
+                            <td>${formatTimeByProject(data[j]["R3"], project)}</td>
                     `
 
                     let trBy45Project = `
-                            <td>${formatTime(data[j]["R4"])}</td>
-                            <td>${formatTime(data[j]["R5"])}</td>
+                            <td>${formatTimeByProject(data[j]["R4"], project)}</td>
+                            <td>${formatTimeByProject(data[j]["R5"], project)}</td>
                     `
 
 
@@ -142,9 +98,9 @@ function syncContest() {
                         <tr>
                             <td>${j + 1}</td>
                             <td>${data[j]["Player"]}</td>
-                            <td style="${bestStyle}">${formatTime(data[j]["Best"])} ${bestUpIcons}</td>
-                            <td style="${avgStyle}">${formatTime(data[j]["Avg"])} ${avgUpIcons}</td>
-                            <td>${formatTime(data[j]["R1"])}</td>
+                            <td style="${bestStyle}">${formatTimeByProject(data[j]["Best"],project)} ${bestUpIcons}</td>
+                            <td style="${avgStyle}">${formatTimeByProject(data[j]["Avg"])} ${avgUpIcons}</td>
+                            <td>${formatTimeByProject(data[j]["R1"])}</td>
                                ${trBy23Project}
                                ${trBy45Project}
                         </tr>
