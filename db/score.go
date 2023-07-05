@@ -20,9 +20,9 @@ type Score struct {
 	ContestID    uint      `json:"ContestID" gorm:"index;not null;column:contest_id"` // 比赛的ID
 	RouteNumber  uint      `json:"RouteNumber" gorm:"not null;column:route_number"`   // 该项目的轮次
 	Project      Project   `json:"Project" gorm:"not null;column:project"`            // 分项目 333/222/444等
-	Result1      float64   `json:"R1" gorm:"column:r1;NULL"`                          // 成绩1
-	Result2      float64   `json:"R2" gorm:"column:r2;NULL"`                          // 成绩2
-	Result3      float64   `json:"R3" gorm:"column:r3;NULL"`                          // 成绩3
+	Result1      float64   `json:"R1" gorm:"column:r1;NULL"`                          // 成绩1 多盲时这个成绩是实际还原数
+	Result2      float64   `json:"R2" gorm:"column:r2;NULL"`                          // 成绩2 多盲时这个成绩是尝试复原数
+	Result3      float64   `json:"R3" gorm:"column:r3;NULL"`                          // 成绩3 多盲时这个成绩是计时
 	Result4      float64   `json:"R4" gorm:"column:r4;NULL"`                          // 成绩4
 	Result5      float64   `json:"R5" gorm:"column:r5;NULL"`                          // 成绩5
 	Best         float64   `json:"Best" gorm:"column:best;NULL"`                      // 五把最好成绩
@@ -52,37 +52,53 @@ func (s *Score) SetResult(in []float64) error {
 			return fmt.Errorf("该项目需要输入5个成绩")
 		}
 		s.Result1, s.Result2, s.Result3, s.Result4, s.Result5 = in[0], in[1], in[2], in[3], in[4]
-		dnf := s.GetDNF()
 
-		sort.Slice(in, func(i, j int) bool { return in[i] > in[j] })
-		s.Best = in[1]
+		sort.Slice(in, func(i, j int) bool { return in[i] < in[j] })
+		for i := 0; i < len(in); i++ {
+			if in[i] != 0 {
+				s.Best = in[i]
+				break
+			}
+		}
+
+		dnf := s.GetDNF()
 		switch {
 		case dnf == 5:
 			return nil
 		case dnf >= 2:
 			s.Avg = 0
 		default:
-			// 去头尾取平均
 			s.Avg = (in[1] + in[2] + in[3]) / 3
 		}
 		return nil
-		// 三次的项目
-	case Cube666, Cube777, Cube333FM, Cube333BF, Cube444BF, Cube555BF:
+	case Cube666, Cube777, Cube333FM, Cube333BF, Cube444BF, Cube555BF: // 三次的项目
 		if len(in) < 3 {
 			return fmt.Errorf("该项目需要输入3个成绩")
 		}
+		s.Result1, s.Result2, s.Result3 = in[0], in[1], in[2]
 		if s.GetDNF() == 5 {
 			return nil
 		}
-		s.Result1, s.Result2, s.Result3 = in[0], in[1], in[2]
-		sort.Slice(in, func(i, j int) bool { return in[i] > in[j] })
-		s.Avg = (s.Result1 + s.Result2 + s.Result3) / 3
-		s.Best = in[0]
-		// 二个成绩
-	case Cube333MBF:
-		if len(in) < 2 {
-			return fmt.Errorf("该项目需要2个成绩")
+		cache := []float64{in[0], in[1], in[2]}
+		sort.Slice(cache, func(i, j int) bool { return cache[i] < cache[j] })
+
+		hasAvg := true
+		for i := 0; i < len(cache); i++ {
+			if cache[i] != 0 {
+				s.Best = cache[i]
+				break
+			}
+			hasAvg = false
 		}
+
+		if hasAvg {
+			s.Avg = (s.Result1 + s.Result2 + s.Result3) / 3
+		}
+	case Cube333MBF: // 多盲特殊规则
+		if len(in) < 3 {
+			return fmt.Errorf("该项目需要3个成绩")
+		}
+		s.Result1, s.Result2, s.Result3 = in[0], in[1], in[2]
 	}
 	return nil
 }
@@ -99,4 +115,47 @@ func (s *Score) GetDNF() int {
 		}
 	}
 	return dnf
+}
+
+func (s *Score) IsBestScore(other Score) bool {
+	switch s.Project {
+	case Cube333MBF:
+		if s.Result1 > other.Result1 {
+			return true
+		}
+		if other.Result1 < other.Result1 {
+			return false
+		}
+		return s.Result3 < other.Result3
+	default:
+		if s.Best == 0 {
+			return false
+		}
+		if other.Best == 0 {
+			return true
+		}
+		return s.Best < other.Best
+	}
+}
+
+func (s *Score) IsBestAvgScore(other Score) bool {
+	switch s.Project {
+	case Cube333MBF:
+		// 多盲没有平均
+		if s.Result1 > other.Result1 {
+			return true
+		}
+		if other.Result1 < other.Result1 {
+			return false
+		}
+		return s.Result3 < other.Result3
+	default:
+		if s.Avg == 0 {
+			return false
+		}
+		if other.Avg == 0 {
+			return true
+		}
+		return s.Avg < other.Avg
+	}
 }

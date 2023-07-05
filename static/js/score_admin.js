@@ -103,11 +103,7 @@ function syncScoresList() {
         return
     }
     $.ajax({
-        url: `./../api/score/player/${$("#user-data-list-input").val()}/contest/${$("#contest-select").val()}`,
-        type: "GET",
-        async: false,
-        dataType: "json",
-        timeout: 5000, // 设置超时时间为 5000 毫秒 (5 秒)
+        url: `./../api/score/player/${$("#user-data-list-input").val()}/contest/${$("#contest-select").val()}`, type: "GET", async: false, dataType: "json", timeout: 5000, // 设置超时时间为 5000 毫秒 (5 秒)
         contentType: "application/json; charset=UTF-8", success: function (response) {
             console.log(response)
             console.log(111)
@@ -126,7 +122,7 @@ function syncScoresList() {
 
 function syncProject(select) {
     projectValue = select.options[select.selectedIndex].value
-    if (projectValue === ""){
+    if (projectValue === "") {
         return
     }
 
@@ -138,6 +134,7 @@ function syncProject(select) {
         case "555bf":
         case "666":
         case "777":
+        case "333mbf":
             console.log("只有三个的项目", projectValue);
             enableInputScoreNumber([1, 2, 3]);
             break
@@ -145,10 +142,6 @@ function syncProject(select) {
         case "jhh":
             console.log("只有一轮的项目", projectValue);
             enableInputScoreNumber([1]);
-            break
-        case "333mbf":
-            console.log("只有两的项目", projectValue);
-            enableInputScoreNumber([1, 2]);
             break
         default:
             enableInputScoreNumber([1, 2, 3, 4, 5]);
@@ -230,7 +223,7 @@ function syncByTabScore() {
         contestSelect.empty()
         for (let i = 0; i < contestsList.length; i++) {
             const contest = contestsList[i]
-            if (contest["IsEnd"]){
+            if (contest["IsEnd"]) {
                 continue
             }
             const option = `<option value="${contest["ID"]}"> ${contest["Name"]} </option>`
@@ -286,18 +279,17 @@ function syncByTabPlayer() {
     }
 }
 
-function submitContest(){
+function submitContest() {
     const name = $("#add-contest-input-name")
     const description = $("#add-contest-input-description")
-    if (name.val() === ""){
+    if (name.val() === "") {
         alert("比赛名不能为空")
         return
     }
 
     $.ajax({
         url: "./../api/contests", type: 'POST', data: {
-            "Name": name.val(),
-            "Description": description.val()
+            "Name": name.val(), "Description": description.val()
         }, async: false, timeout: 5000, // 设置超时时间为 5000 毫秒 (5 秒)
         success: function (response) {
             name.val("")

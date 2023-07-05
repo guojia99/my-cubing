@@ -56,7 +56,7 @@ function syncAllProjectBestScores() {
 
 function syncAllProjectScores() {
     $.ajax({
-        url: "./../api/score/report/all_project",
+        url: "./../api/score/report/all_project_score",
         type: 'GET',
         async: true,
         timeout: 5000,
@@ -89,11 +89,11 @@ function syncAllProjectScores() {
 
                     if (projectBest.length >= maxLength) {
                         bestPlayer = projectBest[i]["Player"]
-                        bestScore = projectBest[i]["Score"]
+                        bestScore = projectBest[i]["Best"]
                     }
                     if (projectAvg.length >= maxLength) {
                         avgPlayer = projectAvg[i]["Player"]
-                        avgScore = projectAvg[i]["Score"]
+                        avgScore = projectAvg[i]["Avg"]
                     }
 
 

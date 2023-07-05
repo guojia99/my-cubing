@@ -37,8 +37,8 @@ type (
 
 type (
 	ProjectScores struct {
-		Player string  `json:"Player"`
-		Score  float64 `json:"Score"`
+		Player string `json:"Player"`
+		db.Score
 	}
 
 	GetProjectScoresResponse struct {
@@ -50,9 +50,9 @@ type (
 
 type (
 	SorScoreDetail struct {
-		Player string  `json:"Player"`
-		Value  float64 `json:"-"`
-		Count  int     `json:"Count"`
+		db.Score
+		Player string `json:"Player"`
+		Count  int    `json:"Count"`
 	}
 
 	GetSorScoresResponse struct {
@@ -86,6 +86,6 @@ type (
 
 type (
 	EndContestScoreRequest struct {
-		ContestID uint `json:"ContestId"`
+		ContestID uint `uri:"contest_id"`
 	}
 )
