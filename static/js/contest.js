@@ -20,6 +20,41 @@ function getAllQueryParams() {
     return queryParams;
 }
 
+function formatTime(number) {
+
+    console.log(number)
+    let seconds = 0
+    try {
+        seconds = Number(number.toFixed(3));
+    } catch (e) {
+        seconds = 0
+    }
+    if (seconds === 0) {
+        return "DNF";
+    }
+
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = (seconds % 60).toFixed(2);
+
+    let formattedTime = "";
+    if (hours > 0) {
+        formattedTime += hours + ":";
+    }
+    if (minutes > 0) {
+        formattedTime += minutes;
+    }
+    if (hours === 0 && minutes === 0) {
+        formattedTime += remainingSeconds;
+    } else if (remainingSeconds !== "0.00") {
+        formattedTime += ":" + remainingSeconds;
+    }
+
+    return formattedTime;
+}
+
+
+
 function syncContest() {
 
     let params = getAllQueryParams()
@@ -36,38 +71,82 @@ function syncContest() {
             const projectBody = $("#all_project_body")
             document.getElementById("contest_name").innerHTML = `${response["ContestName"]} 赛果`
 
+
             for (let i = 0; i < response["ProjectList"].length; i++) {
+                let thBy23Project = `
+                            <th scope="col">还原2</th>
+                            <th scope="col">还原3</th>
+                    `
+                let thBy45Project = `
+                            <th scope="col">还原4</th>
+                            <th scope="col">还原5</th>
+                    `
+
+
                 let project = response["ProjectList"][i];
                 let tableBody = ""
                 const data = response["Data"][project]
-                for (let j = 0; j < data.length; j++){
+                for (let j = 0; j < data.length; j++) {
 
 
                     let bestStyle = ""
                     let bestUpIcons = ""
-                    if (data[j]["IsBest"]){
-                        bestUpIcons =  ` <i class="bi bi-graph-up-arrow"></i>`
+                    if (data[j]["IsBest"]) {
+                        bestUpIcons = ` <i class="bi bi-graph-up-arrow"></i>`
                         bestStyle = "color:#dc3545;font-weight:bold"
                     }
 
                     let avgStyle = ""
                     let avgUpIcons = ""
-                    if (data[j]["IsBestAvg"]){
+                    if (data[j]["IsBestAvg"]) {
                         avgUpIcons = ` <i class="bi bi-graph-up-arrow"></i>`
                         avgStyle = "color:#dc3545;font-weight:bold"
                     }
 
+
+                    // 这里为了区分多个三个的项目等
+                    let trBy23Project = `
+                            <td>${formatTime(data[j]["R2"])}</td>
+                            <td>${formatTime(data[j]["R3"])}</td>
+                    `
+
+                    let trBy45Project = `
+                            <td>${formatTime(data[j]["R4"])}</td>
+                            <td>${formatTime(data[j]["R5"])}</td>
+                    `
+
+
+                    switch (project) {
+                        case "最少步":
+                        case "三盲":
+                        case "四盲":
+                        case "五盲":
+                        case "六阶":
+                        case "七阶":
+                        case "多盲":
+                            trBy45Project = ""
+                            thBy45Project = ""
+                            break
+                        case "菊爆浩浩":
+                        case "速可乐":
+                            trBy23Project = ""
+                            trBy45Project = ""
+                            thBy23Project = ""
+                            thBy45Project = ""
+                            break
+                        default:
+                            break
+                    }
+
                     let tr = `
                         <tr>
-                            <td>${j+1}</td>
+                            <td>${j + 1}</td>
                             <td>${data[j]["Player"]}</td>
-                            <td style="${bestStyle}">${data[j]["Best"]} ${bestUpIcons}</td>
-                            <td style="${avgStyle}">${data[j]["Avg"]} ${avgUpIcons}</td>
-                            <td>${data[j]["Result1"]}</td>
-                            <td>${data[j]["Result2"]}</td>
-                            <td>${data[j]["Result3"]}</td>
-                            <td>${data[j]["Result4"]}</td>
-                            <td>${data[j]["Result5"]}</td>
+                            <td style="${bestStyle}">${formatTime(data[j]["Best"])} ${bestUpIcons}</td>
+                            <td style="${avgStyle}">${formatTime(data[j]["Avg"])} ${avgUpIcons}</td>
+                            <td>${formatTime(data[j]["R1"])}</td>
+                               ${trBy23Project}
+                               ${trBy45Project}
                         </tr>
                     `
                     tableBody += tr
@@ -76,7 +155,7 @@ function syncContest() {
                 let table = `
                         <div style="margin-top: 25px">
                             <div class="col-md-12">
-                                <h3 class="text-center"><strong>${project}</strong></h3>
+                                <h3><strong>${project}</strong></h3>
                                     <table class="table table-bordered table-striped" style="text-align:center">
                                         <thead>
                                             <tr>
@@ -85,10 +164,8 @@ function syncContest() {
                                                 <th scope="col">单次</th>
                                                 <th scope="col">平均</th>
                                                 <th scope="col">还原1</th>
-                                                <th scope="col">还原2</th>
-                                                <th scope="col">还原3</th>
-                                                <th scope="col">还原4</th>
-                                                <th scope="col">还原5</th>
+                                                ${thBy23Project}
+                                                ${thBy45Project}
                                             </tr>
                                         </thead>
                                     <tbody>${tableBody}</tbody>

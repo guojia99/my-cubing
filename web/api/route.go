@@ -43,8 +43,8 @@ func AddApiRoute(route *gin.RouterGroup) {
 			scoreRoute.POST("/", score.CreateScore)                                               // 上传成绩
 			scoreRoute.DELETE("/", score.DeleteScore)                                             // 移除成绩
 
-			scoreRoute.GET("/report/all_project", score.GetProjectScores)             // 获取所有项目成绩列表
-			scoreRoute.GET("/report/all_project_best", score.GetAllProjectBestScore)  // 获取所有成绩最佳排名
+			scoreRoute.GET("/report/all_project_score", score.GetProjectScores)       // 获取所有项目成绩列表
+			scoreRoute.GET("/report/all_project_best", score.GetAllProjectBestScore)  // 获取所有项目最佳的成绩, 有且仅有一个最佳和一个单次
 			scoreRoute.GET("/report/all_sor", score.GetSorScores)                     // sor 排名
 			scoreRoute.GET("/report/contest/:contest_id", score.GetContestScores)     // 某场比赛的成绩汇总
 			scoreRoute.POST("/report/contest/:contest_id/end", score.EndContestScore) // 结束某场比赛并开始统计

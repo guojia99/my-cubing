@@ -90,6 +90,7 @@ func CreateScore(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
 		return
 	}
+
 	if err = db.DB.Save(&score).Error; err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
 		return
@@ -107,17 +108,18 @@ func CreateScore(ctx *gin.Context) {
 		bestAvg db.Score
 	)
 	// 查之前所有的成绩
-	if err = db.DB.Where("player_id = ?", p.ID).Where("project = ?", pj).Where("id != ?", score.ID).Order("dest").First(&best).Error; err != nil {
-		if best.Best > score.Best {
-			score.IsBest = true
-			db.DB.Save(&score)
-		}
+	err = db.DB.Where("player_id = ?", p.ID).Where("project = ?", pj).Where("id != ?", score.ID).Order("best").First(&best).Error
+	if ((err != nil || best.Best == 0) && score.Best != 0) || (score.IsBestScore(best)) {
+		// 之前没有成绩, 且当前有成绩
+		// 之前有成绩, 当前成绩好
+		score.IsBest = true
+		db.DB.Save(&score)
 	}
-	if err = db.DB.Where("player_id = ?", p.ID).Where("project = ?", pj).Where("id != ?", score.ID).Order("avg").First(&bestAvg).Error; err != nil {
-		if score.Avg != 0 && bestAvg.Avg > score.Avg {
-			score.IsBestAvg = true
-			db.DB.Save(&score)
-		}
+
+	err = db.DB.Where("player_id = ?", p.ID).Where("project = ?", pj).Where("id != ?", score.ID).Order("avg").First(&bestAvg).Error
+	if ((err != nil || best.Avg == 0) && score.Avg != 0) || score.IsBestAvgScore(bestAvg) {
+		score.IsBestAvg = true
+		db.DB.Save(&score)
 	}
 }
 
@@ -159,7 +161,7 @@ func GetAllProjectBestScore(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, out)
 }
 
-// GetProjectScores 获取所有成绩最佳排名
+// GetProjectScores 获取所有成绩
 func GetProjectScores(ctx *gin.Context) {
 	key := "GetProjectScores"
 	if data, ok := caches.Get(key); ok {
@@ -192,14 +194,14 @@ func GetProjectScores(ctx *gin.Context) {
 			if err := db.DB.Where("project = ?", project).Where("player_id = ?", player.ID).Where("best != ?", 0).Order("best").First(&best).Error; err == nil {
 				out.Best[project.Cn()] = append(out.Best[project.Cn()], ProjectScores{
 					Player: player.Name,
-					Score:  best.Best,
+					Score:  best,
 				})
 			}
 
 			if err := db.DB.Where("project = ?", project).Where("player_id = ?", player.ID).Where("avg != ?", 0).Order("avg").First(&avg).Error; err == nil {
 				out.Avg[project.Cn()] = append(out.Avg[project.Cn()], ProjectScores{
 					Player: player.Name,
-					Score:  avg.Avg,
+					Score:  avg,
 				})
 			}
 		}
@@ -208,10 +210,10 @@ func GetProjectScores(ctx *gin.Context) {
 	// 3. 给所有的项目排序
 	for _, project := range db.ProjectList() {
 		sort.Slice(out.Best[project.Cn()], func(i, j int) bool {
-			return out.Best[project.Cn()][i].Score < out.Best[project.Cn()][j].Score
+			return out.Best[project.Cn()][i].IsBestScore(out.Best[project.Cn()][j].Score)
 		})
 		sort.Slice(out.Avg[project.Cn()], func(i, j int) bool {
-			return out.Avg[project.Cn()][i].Score < out.Avg[project.Cn()][j].Score
+			return out.Avg[project.Cn()][i].IsBestAvgScore(out.Avg[project.Cn()][j].Score)
 		})
 	}
 
@@ -248,11 +250,11 @@ func GetSorScores(ctx *gin.Context) {
 			)
 
 			if err := db.DB.Where("project = ?", project).Where("player_id = ?", player.ID).Where("best != ?", 0).Order("best").First(&best).Error; err == nil {
-				bestCache[project] = append(bestCache[project], SorScoreDetail{Player: player.Name, Value: best.Best})
+				bestCache[project] = append(bestCache[project], SorScoreDetail{Player: player.Name, Score: best})
 			}
 
 			if err := db.DB.Where("project = ?", project).Where("player_id = ?", player.ID).Where("avg != ?", 0).Order("avg").First(&avg).Error; err == nil {
-				avgCache[project] = append(avgCache[project], SorScoreDetail{Player: player.Name, Value: best.Best})
+				avgCache[project] = append(avgCache[project], SorScoreDetail{Player: player.Name, Score: avg})
 			}
 		}
 	}
@@ -260,10 +262,10 @@ func GetSorScores(ctx *gin.Context) {
 	// 3. 排序
 	for _, project := range db.ProjectList() {
 		sort.Slice(bestCache[project], func(i, j int) bool {
-			return bestCache[project][i].Value < bestCache[project][j].Value
+			return bestCache[project][i].IsBestScore(bestCache[project][j].Score)
 		})
 		sort.Slice(avgCache[project], func(i, j int) bool {
-			return avgCache[project][i].Value < avgCache[project][j].Value
+			return avgCache[project][i].IsBestAvgScore(avgCache[project][j].Score)
 		})
 	}
 
@@ -326,7 +328,11 @@ func GetContestScores(ctx *gin.Context) {
 		return
 	}
 
-	// todo 加缓存
+	key := fmt.Sprintf("GetContestScores_%d", req.ContestID)
+	if data, ok := caches.Get(key); ok {
+		ctx.JSON(http.StatusOK, data)
+		return
+	}
 
 	// 1. 获取比赛的信息
 	var contest db.Contest
@@ -407,6 +413,7 @@ func GetContestScores(ctx *gin.Context) {
 		out.Players = append(out.Players, val)
 	}
 
+	caches.Add(key, out, time.Minute*5)
 	ctx.JSON(http.StatusOK, out)
 }
 
