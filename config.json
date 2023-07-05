@@ -1,0 +1,6 @@
+{
+  "db": {
+    "driver": "mysql",
+    "path": "root:my123456@tcp(127.0.0.1:3306)/mycube?charset=utf8&parseTime=True&loc=Local"
+  }
+}
