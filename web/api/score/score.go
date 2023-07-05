@@ -9,10 +9,12 @@ package score
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"sort"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	json "github.com/json-iterator/go"
 	"k8s.io/apimachinery/pkg/util/cache"
 
 	"my-cubing/db"
@@ -152,7 +154,7 @@ func GetAllProjectBestScore(ctx *gin.Context) {
 			if err = db.DB.Where("id = ?", avg.PlayerID).First(&avgPlayer).Error; err == nil {
 				bestScore.AvgPlayer = avgPlayer.Name
 			}
-			bestScore.AvgScore = best.Avg
+			bestScore.AvgScore = avg.Avg
 		}
 		out.Data = append(out.Data, bestScore)
 	}
@@ -377,8 +379,8 @@ func GetContestScores(ctx *gin.Context) {
 	}
 
 	var hasProject []db.Project
-	for key, _ := range scoreCache {
-		hasProject = append(hasProject, key)
+	for k, _ := range scoreCache {
+		hasProject = append(hasProject, k)
 	}
 	sort.Slice(hasProject, func(i, j int) bool { return hasProject[i] < hasProject[j] })
 	for _, val := range hasProject {
@@ -389,7 +391,7 @@ func GetContestScores(ctx *gin.Context) {
 		ss := scoreCache[project]
 		sort.Slice(ss, func(i, j int) bool {
 			iHasAvg := ss[i].Avg != 0
-			jHasAvg := ss[i].Avg != 0
+			jHasAvg := ss[j].Avg != 0
 
 			// 一方有平均， 另一方无平均, 有平均排前
 			if (iHasAvg && !jHasAvg) || (jHasAvg && !iHasAvg) {
@@ -397,7 +399,7 @@ func GetContestScores(ctx *gin.Context) {
 			}
 			// 双方都有平均, 小的排前, 相同则最佳成绩的排前
 			if iHasAvg && jHasAvg {
-				if ss[i].Avg == ss[i].Avg {
+				if ss[i].Avg == ss[j].Avg {
 					return ss[i].Best < ss[j].Best
 				}
 				return ss[i].Avg < ss[j].Avg
@@ -405,6 +407,10 @@ func GetContestScores(ctx *gin.Context) {
 			// 双方都无平均, 按最佳成绩排
 			return ss[i].Best < ss[j].Best
 		})
+		if project == db.Cube333FM {
+			data, _ := json.Marshal(ss)
+			os.WriteFile("test.json", data, 0644)
+		}
 		out.Data[project.Cn()] = append(out.Data[project.Cn()], ss...)
 	}
 	out.ContestName = contest.Name

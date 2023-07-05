@@ -179,6 +179,7 @@ function submitScores() {
             input5.val("")
             syncByTabScore()
             syncScoresList()
+            syncScoresInput()
         }, error: function (data, status) {
             alert(`记录失败 ${data} ${status}`)
         }

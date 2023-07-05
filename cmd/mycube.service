@@ -1,0 +1,14 @@
+[Unit]
+Description=MyCube
+After=rc-local.service
+
+[Service]
+Type=simple
+WorkingDirectory=/usr/local/bin
+LimitCORE=infinity
+ExecStart=/usr/local/bin/mycube
+RestartSec=1
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
