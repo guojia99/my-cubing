@@ -33,11 +33,11 @@ function formatTimeByProject(number, project) {
         }
         return String(number);
     } else if (hasMinutes && hasSeconds) {
-        return `${formattedMinutes}:${formattedSeconds}.${String(milliseconds).padStart(3, "0")}`;
+        return `${formattedMinutes}:${formattedSeconds}.${String(milliseconds).padStart(2, "0").substring(0,2)}`;
     } else if (hasMinutes && !hasSeconds) {
-        return `${formattedMinutes}.${String(milliseconds).padStart(3, "0")}`;
+        return `${formattedMinutes}:00.${String(milliseconds).padStart(2, "0").substring(0,2)}`;
     } else if (!hasMinutes && hasSeconds) {
-        return `${formattedSeconds}.${String(milliseconds).padStart(3, "0")}`;
+        return `${formattedSeconds}.${String(milliseconds).padStart(2, "0").substring(0,2)}`;
     } else {
         return "DNF";
     }

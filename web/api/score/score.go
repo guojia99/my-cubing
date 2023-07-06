@@ -110,7 +110,7 @@ func CreateScore(ctx *gin.Context) {
 		bestAvg db.Score
 	)
 	// 查之前所有的成绩
-	err = db.DB.Where("player_id = ?", p.ID).Where("project = ?", pj).Where("id != ?", score.ID).Order("best").First(&best).Error
+	err = db.DB.Where("player_id = ?", p.ID).Where("project = ?", pj).Where("best != ?", 0).Where("id != ?", score.ID).Order("best").First(&best).Error
 	if ((err != nil || best.Best == 0) && score.Best != 0) || (score.IsBestScore(best)) {
 		// 之前没有成绩, 且当前有成绩
 		// 之前有成绩, 当前成绩好
@@ -118,7 +118,7 @@ func CreateScore(ctx *gin.Context) {
 		db.DB.Save(&score)
 	}
 
-	err = db.DB.Where("player_id = ?", p.ID).Where("project = ?", pj).Where("id != ?", score.ID).Order("avg").First(&bestAvg).Error
+	err = db.DB.Where("player_id = ?", p.ID).Where("project = ?", pj).Where("avg != ?", 0).Where("id != ?", score.ID).Order("avg").First(&bestAvg).Error
 	if ((err != nil || best.Avg == 0) && score.Avg != 0) || score.IsBestAvgScore(bestAvg) {
 		score.IsBestAvg = true
 		db.DB.Save(&score)
@@ -278,6 +278,11 @@ func GetSorScores(ctx *gin.Context) {
 	}
 
 	for _, project := range db.ProjectList() {
+		// 过滤两个非官方项目
+		switch project {
+		case db.JuBaoHaoHao, db.OtherCola:
+			continue
+		}
 		for _, player := range players {
 			var bestAdd bool
 			var avgAdd bool
