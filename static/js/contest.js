@@ -100,7 +100,7 @@ function syncContest() {
                             <td>${data[j]["Player"]}</td>
                             <td style="${bestStyle}">${formatTimeByProject(data[j]["Best"],project)} ${bestUpIcons}</td>
                             <td style="${avgStyle}">${formatTimeByProject(data[j]["Avg"])} ${avgUpIcons}</td>
-                            <td>${formatTimeByProject(data[j]["R1"])}</td>
+                            <td>${formatTimeByProject(data[j]["R1"],project)}</td>
                                ${trBy23Project}
                                ${trBy45Project}
                         </tr>

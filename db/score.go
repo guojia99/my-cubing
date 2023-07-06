@@ -63,11 +63,11 @@ func (s *Score) SetResult(in []float64) error {
 
 		dnf := s.GetDNF()
 		switch {
-		case dnf == 5:
-			return nil
-		case dnf >= 2:
+		case dnf == 1: // 有一把D的情况下, 去掉最好成绩后取平均
+			s.Avg = (in[2] + in[3] + in[4]) / 3
+		case dnf >= 2: // 两把以上D直接无平均
 			s.Avg = 0
-		default:
+		default: // 正常去头尾
 			s.Avg = (in[1] + in[2] + in[3]) / 3
 		}
 		return nil

@@ -83,6 +83,7 @@ if __name__ == "__main__":
         "小马哥",
         "诚诚",
         "北凉",
+        "孤烟往事",
     ]
 
     for i in data:
@@ -110,6 +111,10 @@ if __name__ == "__main__":
         {
             "csv_file_path": './scores/魔缘20230626第五期群赛赛果.csv',
             "contest_name": "魔缘2023第五期群赛"
+        },
+        {
+            "csv_file_path": './scores/魔缘20230702第六期群赛赛果.csv',
+            "contest_name": "魔缘2023第六期群赛"
         },
     ]
 
