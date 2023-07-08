@@ -1,4 +1,3 @@
-
 function getAllQueryParams() {
     const queryParams = {};
     const queryString = window.location.search.substring(1);
@@ -39,11 +38,13 @@ function syncContest() {
 
 
             for (let i = 0; i < response["ProjectList"].length; i++) {
+                let thByBestAndAvg = `<th scope="col">单次</th> <th scope="col">平均</th>`
+                let thBy1Project = `<th scope="col">还原1</th>`
                 let thBy23Project = `<th scope="col">还原2</th><th scope="col">还原3</th>`
                 let thBy45Project = ` <th scope="col">还原4</th><th scope="col">还原5</th>`
 
-
                 let project = response["ProjectList"][i], tableBody = ""
+
                 const data = response["Data"][project]
                 for (let j = 0; j < data.length; j++) {
                     let bestStyle = "", bestUpIcons = ""
@@ -61,6 +62,7 @@ function syncContest() {
 
 
                     // 这里为了区分多个三个的项目等
+                    let trBy1Project = `<td>${formatTimeByProject(data[j]["R1"], project)}</td>`
                     let trBy23Project = `
                             <td>${formatTimeByProject(data[j]["R2"], project)}</td>
                             <td>${formatTimeByProject(data[j]["R3"], project)}</td>
@@ -72,6 +74,9 @@ function syncContest() {
                     `
 
 
+                    let trByBestAndAvg = `<td style="${bestStyle}">${formatTimeByProject(data[j]["Best"], project)} ${bestUpIcons}</td>
+                            <td style="${avgStyle}">${formatTimeByProject(data[j]["Avg"], project)} ${avgUpIcons}</td>`
+
                     switch (project) {
                         case "最少步":
                         case "三盲":
@@ -79,7 +84,16 @@ function syncContest() {
                         case "五盲":
                         case "六阶":
                         case "七阶":
+                            trBy45Project = ""
+                            thBy45Project = ""
+                            break
                         case "多盲":
+                            thByBestAndAvg = `<th scope="col">成绩</th>`
+                            thBy1Project = `<th scope="col">还原数</th>`
+                            thBy23Project =  `<th scope="col">尝试数</th><th scope="col">还原时间</th>`
+                            trBy1Project = `<td>${formatTimeByProject(data[j]["R1"], project)}</td>`
+                            trBy23Project = `<td>${formatTimeByProject(data[j]["R2"], project)}</td><td>${formatTimeByProject(data[j]["R3"])}</td>`
+                            trByBestAndAvg = `<td>${formatTimeByProject(data[j]["R1"], project)} / ${formatTimeByProject(data[j]["R2"], project)}</td>`
                             trBy45Project = ""
                             thBy45Project = ""
                             break
@@ -98,11 +112,10 @@ function syncContest() {
                         <tr>
                             <td>${j + 1}</td>
                             <td>${data[j]["Player"]}</td>
-                            <td style="${bestStyle}">${formatTimeByProject(data[j]["Best"],project)} ${bestUpIcons}</td>
-                            <td style="${avgStyle}">${formatTimeByProject(data[j]["Avg"])} ${avgUpIcons}</td>
-                            <td>${formatTimeByProject(data[j]["R1"],project)}</td>
-                               ${trBy23Project}
-                               ${trBy45Project}
+                                ${trByBestAndAvg}
+                                ${trBy1Project}
+                                ${trBy23Project}
+                                ${trBy45Project}
                         </tr>
                     `
                     tableBody += tr
@@ -117,9 +130,8 @@ function syncContest() {
                                             <tr>
                                                 <th scope="col">排名</th>
                                                 <th scope="col">选手</th>
-                                                <th scope="col">单次</th>
-                                                <th scope="col">平均</th>
-                                                <th scope="col">还原1</th>
+                                                ${thByBestAndAvg}
+                                                ${thBy1Project}
                                                 ${thBy23Project}
                                                 ${thBy45Project}
                                             </tr>

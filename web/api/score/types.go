@@ -22,12 +22,21 @@ type CreateScoreRequest struct {
 }
 
 type (
+	DeleteScoreRequest struct {
+		PlayerName string `uri:"player_name"`
+		ContestID  uint   `uri:"contest_id"`
+		Project    string `uri:"project_key"`
+	}
+)
+
+type (
 	BestScore struct {
 		Project    string  `json:"Project"`
 		BestPlayer string  `json:"BestPlayer"`
 		BestScore  float64 `json:"BestScore"`
 		AvgPlayer  string  `json:"AvgPlayer"`
 		AvgScore   float64 `json:"AvgScore"`
+		MBFScore   string  `json:"MBFScore"`
 	}
 
 	GetAllProjectBestScoreResponse struct {

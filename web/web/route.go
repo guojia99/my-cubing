@@ -27,7 +27,7 @@ func AddWebRoute(e *gin.Engine) {
 
 	e.StaticFile("/favicon.ico", staticIconPath)
 
-	e.StaticFile("/admin/score", path.Join(staticHtmlPath, "score_admin.html")) // 成绩记录页
+	e.StaticFile("/xadmin/score", path.Join(staticHtmlPath, "score_admin.html")) // 成绩记录页
 
 	e.StaticFile("/", path.Join(staticHtmlPath, "index.html"))           // 主页
 	e.StaticFile("/score", path.Join(staticHtmlPath, "best_score.html")) // 所有项目汇总主页

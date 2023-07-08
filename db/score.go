@@ -99,6 +99,9 @@ func (s *Score) SetResult(in []float64) error {
 			return fmt.Errorf("该项目需要3个成绩")
 		}
 		s.Result1, s.Result2, s.Result3 = in[0], in[1], in[2]
+		if s.Result1 != 0 {
+			s.Best = s.Result1
+		}
 	}
 	return nil
 }
@@ -120,19 +123,20 @@ func (s *Score) GetDNF() int {
 func (s *Score) IsBestScore(other Score) bool {
 	switch s.Project {
 	case Cube333MBF:
-		if s.Result1 > other.Result1 {
-			return true
+		// 多盲特殊评分规则
+		// 1. 还原数多的, 排名优先
+		// 2. 还原数相等, 尝试还原数少的排名优先
+		// 3. 还原数和尝试还原数相等, 则还原时间少的优先
+		if s.Result1 == other.Result1 {
+			if s.Result2 < other.Result2 {
+				return true
+			}
+			return s.Result3 < other.Result3
 		}
-		if other.Result1 < other.Result1 {
-			return false
-		}
-		return s.Result3 < other.Result3
+		return s.Result1 > other.Result1
 	default:
-		if s.Best == 0 {
-			return false
-		}
-		if other.Best == 0 {
-			return true
+		if s.Best == 0 || other.Best == 0 {
+			return s.Best == 0
 		}
 		return s.Best < other.Best
 	}
@@ -142,19 +146,10 @@ func (s *Score) IsBestAvgScore(other Score) bool {
 	switch s.Project {
 	case Cube333MBF:
 		// 多盲没有平均
-		if s.Result1 > other.Result1 {
-			return true
-		}
-		if other.Result1 < other.Result1 {
-			return false
-		}
-		return s.Result3 < other.Result3
+		return true
 	default:
-		if s.Avg == 0 {
-			return false
-		}
-		if other.Avg == 0 {
-			return true
+		if s.Avg == 0 || other.Avg == 0 {
+			return s.Best == 0
 		}
 		return s.Avg < other.Avg
 	}

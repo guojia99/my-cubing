@@ -39,9 +39,9 @@ func AddApiRoute(route *gin.RouterGroup) {
 		// 成绩
 		scoreRoute := api.Group("/score")
 		{
-			scoreRoute.GET("/player/:player_name/contest/:contest_id", score.GetUserContestScore) // 获取某个选手某场成绩
-			scoreRoute.POST("/", score.CreateScore)                                               // 上传成绩
-			scoreRoute.DELETE("/", score.DeleteScore)                                             // 移除成绩
+			scoreRoute.GET("/player/:player_name/contest/:contest_id", score.GetUserContestScore)                 // 获取某个选手某场成绩
+			scoreRoute.POST("/", score.CreateScore)                                                               // 上传成绩
+			scoreRoute.DELETE("/player/:player_name/contest/:contest_id/project/:project_key", score.DeleteScore) // 移除成绩
 
 			scoreRoute.GET("/report/all_project_score", score.GetProjectScores)       // 获取所有项目成绩列表
 			scoreRoute.GET("/report/all_project_best", score.GetAllProjectBestScore)  // 获取所有项目最佳的成绩, 有且仅有一个最佳和一个单次

@@ -9,12 +9,10 @@ package score
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"sort"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	json "github.com/json-iterator/go"
 	"k8s.io/apimachinery/pkg/util/cache"
 
 	"my-cubing/db"
@@ -67,8 +65,8 @@ func CreateScore(ctx *gin.Context) {
 	}
 
 	// 2. 查看玩家是否存在，不存在创建一个
-	var p = db.Player{Name: req.PlayerName}
-	if err := db.DB.FirstOrCreate(&p, "name = ?", req.PlayerName).Error; err != nil {
+	var player = db.Player{Name: req.PlayerName}
+	if err := db.DB.FirstOrCreate(&player, "name = ?", req.PlayerName).Error; err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
 		return
 	}
@@ -76,13 +74,13 @@ func CreateScore(ctx *gin.Context) {
 	// 3. 找到尝试找到本场比赛成绩, 找到就直接覆盖, 或者插入成绩
 	var score db.Score
 	err := db.DB.Model(&db.Score{}).
-		Where("player_id = ?", p.ID).Where("contest_id = ?", req.ContestID).
+		Where("player_id = ?", player.ID).Where("contest_id = ?", req.ContestID).
 		Where("route_number = ?", 1).Where("project = ?", pj).First(&score).Error
 
 	if err != nil || score.ID == 0 {
 		score = db.Score{
 			CreatedAt:   time.Now(),
-			PlayerID:    p.ID,
+			PlayerID:    player.ID,
 			ContestID:   req.ContestID,
 			RouteNumber: req.RouteNumber,
 			Project:     db.StrToProject(req.ProjectName),
@@ -110,7 +108,7 @@ func CreateScore(ctx *gin.Context) {
 		bestAvg db.Score
 	)
 	// 查之前所有的成绩
-	err = db.DB.Where("player_id = ?", p.ID).Where("project = ?", pj).Where("best != ?", 0).Where("id != ?", score.ID).Order("best").First(&best).Error
+	err = db.DB.Where("player_id = ?", player.ID).Where("project = ?", pj).Where("best != ?", 0).Where("id != ?", score.ID).Order("best").First(&best).Error
 	if ((err != nil || best.Best == 0) && score.Best != 0) || (score.IsBestScore(best)) {
 		// 之前没有成绩, 且当前有成绩
 		// 之前有成绩, 当前成绩好
@@ -118,14 +116,55 @@ func CreateScore(ctx *gin.Context) {
 		db.DB.Save(&score)
 	}
 
-	err = db.DB.Where("player_id = ?", p.ID).Where("project = ?", pj).Where("avg != ?", 0).Where("id != ?", score.ID).Order("avg").First(&bestAvg).Error
+	err = db.DB.Where("player_id = ?", player.ID).Where("project = ?", pj).Where("avg != ?", 0).Where("id != ?", score.ID).Order("avg").First(&bestAvg).Error
 	if ((err != nil || best.Avg == 0) && score.Avg != 0) || score.IsBestAvgScore(bestAvg) {
 		score.IsBestAvg = true
 		db.DB.Save(&score)
 	}
 }
 
-func DeleteScore(ctx *gin.Context) {}
+func DeleteScore(ctx *gin.Context) {
+	var req DeleteScoreRequest
+	if err := ctx.BindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+
+	// 0. 项目
+	pj := db.StrToProject(req.Project)
+	if pj == 0 {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "该项目类型错误"})
+		return
+	}
+
+	// 1. 查看比赛是否有效
+	var contest db.Contest
+	if err := db.DB.Where("id = ?", req.ContestID).First(&contest).Error; err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+	if contest.IsEnd {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "比赛已结束"})
+		return
+	}
+
+	// 2. 查看玩家是否存在
+	var player = db.Player{Name: req.PlayerName}
+	if err := db.DB.First(&player, "name = ?", req.PlayerName).Error; err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+
+	// 3. 查成绩
+	var score db.Score
+	if err := db.DB.Where("player_id = ?", player.ID).Where("contest_id = ?", contest.ID).Where("project = ?", pj).First(&score).Error; err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+
+	_ = db.DB.Delete(&score).Error
+	ctx.JSON(http.StatusOK, gin.H{"msg": "ok"})
+}
 
 // GetAllProjectBestScore 获取所有成绩最佳
 func GetAllProjectBestScore(ctx *gin.Context) {
@@ -139,6 +178,10 @@ func GetAllProjectBestScore(ctx *gin.Context) {
 		Data: make([]BestScore, 0),
 	}
 	for _, project := range db.ProjectList() {
+		if project == db.Cube333MBF {
+			continue
+		}
+
 		var best db.Score
 		var avg db.Score
 		bestScore := BestScore{Project: project.Cn(), AvgPlayer: "-", BestPlayer: "-"}
@@ -149,6 +192,7 @@ func GetAllProjectBestScore(ctx *gin.Context) {
 			}
 			bestScore.BestScore = best.Best
 		}
+
 		if err := db.DB.Where("avg != ?", 0).Where("project = ?", project).Order("avg").First(&avg).Error; err == nil {
 			var avgPlayer db.Player
 			if err = db.DB.Where("id = ?", avg.PlayerID).First(&avgPlayer).Error; err == nil {
@@ -157,6 +201,16 @@ func GetAllProjectBestScore(ctx *gin.Context) {
 			bestScore.AvgScore = avg.Avg
 		}
 		out.Data = append(out.Data, bestScore)
+	}
+
+	var allMbfScore []db.Score
+	if err := db.DB.Where("project = ?", db.Cube333MBF).Where("r1 != ?", 0).Find(&allMbfScore).Error; err == nil && len(allMbfScore) > 0 {
+		sort.Slice(allMbfScore, func(i, j int) bool { return allMbfScore[i].IsBestScore(allMbfScore[j]) })
+		best := allMbfScore[0]
+		var bestPlayer db.Player
+		if err = db.DB.Where("id = ?", allMbfScore[0].PlayerID).First(&bestPlayer).Error; err == nil {
+			out.Data = append(out.Data, BestScore{Project: db.Cube333MBF.Cn(), BestPlayer: bestPlayer.Name, MBFScore: fmt.Sprintf("%d/%d", int(best.Result1), int(best.Result2)), BestScore: best.Result3})
+		}
 	}
 
 	caches.Add(key, out, time.Minute*5)
@@ -188,11 +242,14 @@ func GetProjectScores(ctx *gin.Context) {
 	// 2. 这个角色查所有的项目最佳成绩
 	for _, player := range players {
 		for _, project := range db.ProjectList() {
+			// 多盲需要独立查询
+			if project == db.Cube333MBF {
+				continue
+			}
 			var (
 				best db.Score
 				avg  db.Score
 			)
-
 			if err := db.DB.Where("project = ?", project).Where("player_id = ?", player.ID).Where("best != ?", 0).Order("best").First(&best).Error; err == nil {
 				out.Best[project.Cn()] = append(out.Best[project.Cn()], ProjectScores{
 					Player: player.Name,
@@ -206,6 +263,15 @@ func GetProjectScores(ctx *gin.Context) {
 					Score:  avg,
 				})
 			}
+		}
+		// 查多盲, 只要有一把成了, 就可以记录进去成绩
+		var mbfScore []db.Score
+		if err := db.DB.Where("project = ?", db.Cube333MBF).Where("player_id = ?", player.ID).Where("r1 != ?", 0).Find(&mbfScore).Error; err == nil && len(mbfScore) > 0 {
+			sort.Slice(mbfScore, func(i, j int) bool { return mbfScore[i].IsBestScore(mbfScore[j]) })
+			out.Best[db.Cube333MBF.Cn()] = append(out.Best[db.Cube333MBF.Cn()], ProjectScores{
+				Player: player.Name,
+				Score:  mbfScore[0],
+			})
 		}
 	}
 
@@ -251,12 +317,22 @@ func GetSorScores(ctx *gin.Context) {
 				avg  db.Score
 			)
 
-			if err := db.DB.Where("project = ?", project).Where("player_id = ?", player.ID).Where("best != ?", 0).Order("best").First(&best).Error; err == nil {
-				bestCache[project] = append(bestCache[project], SorScoreDetail{Player: player.Name, Score: best})
+			if project != db.Cube333MBF {
+				if err := db.DB.Where("project = ?", project).Where("player_id = ?", player.ID).Where("best != ?", 0).Order("best").First(&best).Error; err == nil {
+					bestCache[project] = append(bestCache[project], SorScoreDetail{Player: player.Name, Score: best})
+				}
+
+				if err := db.DB.Where("project = ?", project).Where("player_id = ?", player.ID).Where("avg != ?", 0).Order("avg").First(&avg).Error; err == nil {
+					avgCache[project] = append(avgCache[project], SorScoreDetail{Player: player.Name, Score: avg})
+				}
+				continue
 			}
 
-			if err := db.DB.Where("project = ?", project).Where("player_id = ?", player.ID).Where("avg != ?", 0).Order("avg").First(&avg).Error; err == nil {
-				avgCache[project] = append(avgCache[project], SorScoreDetail{Player: player.Name, Score: avg})
+			// 独立查询多盲
+			var mbfScore []db.Score
+			if err := db.DB.Where("project = ?", db.Cube333MBF).Where("player_id = ?", player.ID).Where("r1 != ?", 0).Find(&mbfScore).Error; err == nil && len(mbfScore) > 0 {
+				sort.Slice(mbfScore, func(i, j int) bool { return mbfScore[i].IsBestScore(mbfScore[j]) })
+				bestCache[project] = append(bestCache[project], SorScoreDetail{Player: player.Name, Score: mbfScore[0]})
 			}
 		}
 	}
@@ -352,7 +428,6 @@ func GetContestScores(ctx *gin.Context) {
 	var scores []db.Score
 	if err := db.DB.Where("contest_id = ?", req.ContestID).Find(&scores).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{})
-		fmt.Println(err)
 		return
 	}
 
@@ -395,27 +470,16 @@ func GetContestScores(ctx *gin.Context) {
 	for _, project := range hasProject {
 		ss := scoreCache[project]
 		sort.Slice(ss, func(i, j int) bool {
-			iHasAvg := ss[i].Avg != 0
-			jHasAvg := ss[j].Avg != 0
-
-			// 一方有平均， 另一方无平均, 有平均排前
-			if (iHasAvg && !jHasAvg) || (jHasAvg && !iHasAvg) {
-				return iHasAvg
-			}
-			// 双方都有平均, 小的排前, 相同则最佳成绩的排前
-			if iHasAvg && jHasAvg {
-				if ss[i].Avg == ss[j].Avg {
-					return ss[i].Best < ss[j].Best
+			switch ss[i].Project {
+			case db.Cube333MBF: // 多盲规则
+				return ss[i].IsBestScore(ss[j].Score)
+			default:
+				if ss[i].Avg+ss[j].Avg == 0 { // 都没有平均成绩
+					return ss[i].IsBestScore(ss[j].Score)
 				}
-				return ss[i].Avg < ss[j].Avg
+				return ss[i].IsBestAvgScore(ss[j].Score)
 			}
-			// 双方都无平均, 按最佳成绩排
-			return ss[i].Best < ss[j].Best
 		})
-		if project == db.Cube333FM {
-			data, _ := json.Marshal(ss)
-			os.WriteFile("test.json", data, 0644)
-		}
 		out.Data[project.Cn()] = append(out.Data[project.Cn()], ss...)
 	}
 	out.ContestName = contest.Name

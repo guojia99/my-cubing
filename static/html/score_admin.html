@@ -14,11 +14,12 @@
 
 
     <link rel="stylesheet" href="../css/score.css">
+    <link rel="stylesheet" href="../css/footer.css">
 </head>
 <body>
 
 
-<div class="container text-center" style="margin-top: 5%">
+<div class="container text-center" style="margin-top: 5%; min-height: 100vh">
     <div class="row  row-cols-3">
         <div class="col-1"></div>
         <div class="col-10">
@@ -110,15 +111,18 @@
                                                        aria-describedby="input-score-number2" onchange="syncScoresInput()">
                                                 <span class="input-group-text" id="input-score-number2">轮次2</span>
                                             </div>
-                                            <div class="input-group mb-3">
-                                                <div class="form-text"> 多盲时请轮次1输入魔方数, 轮次2输入时间</div>
-                                            </div>
+
 
                                             <div class="input-group mb-3">
                                                 <input id="input-score-number3-value" type="text" class="form-control" placeholder="输入第三轮成绩" aria-label="输入第三轮成绩"
                                                        aria-describedby="input-score-number3" onchange="syncScoresInput()">
                                                 <span class="input-group-text" id="input-score-number3">轮次3</span>
                                             </div>
+
+                                            <div class="input-group mb-3">
+                                                <div class="form-text"> 多盲时请 [轮次1输入还原数] [轮次2 输入尝试还原数] [轮次3输入还原时间]</div>
+                                            </div>
+
                                             <div class="input-group mb-3">
                                                 <input id="input-score-number4-value" type="text" class="form-control" placeholder="输入第四轮成绩" aria-label="输入第四轮成绩"
                                                        aria-describedby="input-score-number4" onchange="syncScoresInput()">
@@ -170,7 +174,7 @@
 
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <ol class="list-group list-group-numbered score_css_list-group" id="add-contest-tab-user-list"></ol>
+                                        <ol class="list-group list-group-numbered score_css_list-group" id="add-contest-tab-list"></ol>
                                     </div>
                                 </div>
                             </div>
@@ -210,6 +214,13 @@
         <div class="col-1"></div>
     </div>
 </div>
+
+<footer>
+    <div class="footer_content">
+        <div class="footer_right">Copyright ©  2023 魔缘魔方赛事系统 <a href="http://beian.miit.gov.cn/">粤ICP备XXXXXXXX号</a></div>
+        <div>Powered by <a href="https://github.com/guojia" target="_black">郭泽嘉</a></div>
+    </div>
+</footer>
 
 <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/js/bootstrap.min.js"></script>
 <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.min.js"></script>

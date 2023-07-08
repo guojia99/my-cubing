@@ -17,6 +17,24 @@ function syncAllProjectBestScores() {
             for (let i = 0; i < data.length; i++) {
                 const project = data[i]["Project"]
 
+                if (project === "速可乐" || project === "菊爆浩浩") {
+                    continue
+                }
+
+                if (data[i]["BestScore"] === 0) {
+                    continue
+                }
+                if (project === "多盲") {
+                    body.append(`<tr>
+                        <th scope="row">${project}</th>
+                         <td>${data[i]["BestPlayer"]}</td>
+                       <td>${data[i]["MBFScore"]} (${formatTimeByProject(data[i]["BestScore"])})</td>
+                        <td>-</td>
+                        <td>-</td> 
+                    </tr>`)
+                    continue
+                }
+
 
                 let bestTd = `
                         <td>${data[i]["BestPlayer"]}</td>
@@ -68,10 +86,40 @@ function syncAllProjectScores() {
                     continue
                 }
                 let tableBody = ""
+
+                if (project === "多盲"){
+                    for (let i = 0; i < maxLength; i++) {
+                        // 加入
+                        let tr = `
+                            <tr>
+                                <td>${i}</td>
+                                <td>${projectBest[i]["Player"]}</td>
+                                <td>${projectBest[i]["R1"]} / ${projectBest[i]["R2"]}</td>
+                                <td>${formatTimeByProject(projectBest[i]["R3"])}</td>
+                            </tr>`
+                        tableBody += tr
+                    }
+                    let table = `
+                        <div class="col-md-6" style="margin-top: 30px">
+                                <h3 class="text-center" style="margin-bottom: 15px"><strong>${project}排名</strong></h3>
+                                <table class="table table-bordered table-striped" style="text-align:center">
+                                    <thead>
+                                    <tr>
+                                        <th scope="col">排名</th>
+                                        <th scope="col">选手</th>
+                                        <th scope="col">还原</th>
+                                        <th scope="col">时长</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>${tableBody}</tbody>
+                                </table>
+                        </div>`
+                    allProjectBody.append(table)
+                    continue
+                }
+
                 let bestRoute = 0, avgRoute = 0
                 let lastBestScore = 0, lastAvgScore = 0
-
-
                 for (let i = 0; i < maxLength; i++) {
                     // 如果和上次成绩不同
                     if (projectBest[i]["Best"] !== lastBestScore) {
@@ -97,6 +145,7 @@ function syncAllProjectScores() {
                             </tr>`
                     tableBody += tr
                 }
+
 
                 let table = `
                 <div class="col-md-6" style="margin-top: 30px">

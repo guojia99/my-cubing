@@ -1,8 +1,8 @@
 /*
- *  * Copyright (c) 2023 guojia99 All rights reserved.
- *  * Created: 2023/6/23 上午12:22.
- *  * Author: guojia(https://github.com/guojia99)
- */
+*  * Copyright (c) 2023 guojia99 All rights reserved.
+*  * Created: 2023/6/23 上午12:22.
+*  * Author: guojia(https://github.com/guojia99)
+*/
 
 
 let projectValue = ""
@@ -90,30 +90,57 @@ function syncScoresInput() {
             return
         }
     }
+    const playerInputVal = $("#user-data-list-input").val()
+    if (playerInputVal === ""){
+        return;
+    }
+
     submit.removeAttr("disabled")
     submit.removeClass("btn-secondary")
     submit.addClass("btn-success")
 }
 
 function syncScoresList() {
-    if ($("#contest-select").val() === "") {
-        return
-    }
-    if ($("#user-data-list-input").val() === "") {
+    const contestVal = $("#contest-select").val()
+    const playerInputVal = $("#user-data-list-input").val()
+    if (contestVal === "" || playerInputVal === "") {
         return
     }
     $.ajax({
-        url: `./../api/score/player/${$("#user-data-list-input").val()}/contest/${$("#contest-select").val()}`, type: "GET", async: false, dataType: "json", timeout: 5000, // 设置超时时间为 5000 毫秒 (5 秒)
-        contentType: "application/json; charset=UTF-8", success: function (response) {
-            console.log(response)
-            console.log(111)
+        url: `./../api/score/player/${playerInputVal}/contest/${contestVal}`,
+        type: "GET",
+        async: false,
+        dataType: "json",
+        timeout: 5000, // 设置超时时间为 5000 毫秒 (5 秒)
+        contentType: "application/json; charset=UTF-8",
+        success: function (response) {
             let group = $("#user-scores-list-group")
             group.empty()
             for (let i = 0; i < response["data"].length; i++) {
                 let data = response["data"][i]
                 let result = [data["R1"], data["R2"], data["R3"], data["R4"], data["R5"]]
-                group.append(`<li class="list-group-item">${data['Project']} 成绩 ${result} </li>`)
+                const project = data['Project']
+                group.append(`<li class="list-group-item">${data['Project']} 成绩 ${result} <button type="button" class="btn btn-danger btn-sm" onclick="deleteScore('${contestVal}', '${playerInputVal}', '${project}')">删除</button></li>`)
             }
+        }, error: function (data, status) {
+            console.log(data, status)
+        }
+    })
+    syncScoresInput()
+}
+
+function deleteScore(contest, playerName, project){
+    console.log(`删除 ${contest}, ${playerName}, ${project}`)
+    $.ajax({
+        url: `./../api/score/player/${playerName}/contest/${contest}/project/${project}`,
+        type: "DELETE",
+        async: false,
+        dataType: "json",
+        timeout: 5000, // 设置超时时间为 5000 毫秒 (5 秒)
+        contentType: "application/json; charset=UTF-8",
+        success: function (response) {
+           alert("删除成功")
+            syncScoresList()
         }, error: function (data, status) {
             console.log(data, status)
         }
@@ -135,12 +162,10 @@ function syncProject(select) {
         case "666":
         case "777":
         case "333mbf":
-            console.log("只有三个的项目", projectValue);
             enableInputScoreNumber([1, 2, 3]);
             break
         case "o_cola":
         case "jhh":
-            console.log("只有一轮的项目", projectValue);
             enableInputScoreNumber([1]);
             break
         default:
@@ -166,7 +191,6 @@ function submitScores() {
         "ProjectName": $("#project-select").val(),
         "Results": [parseTimeToSeconds(input1.val()), parseTimeToSeconds(input2.val()), parseTimeToSeconds(input3.val()), parseTimeToSeconds(input4.val()), parseTimeToSeconds(input5.val()),],
     }
-    console.log(data)
 
     $.ajax({
         url: "./../api/score", type: "POST", async: false, dataType: "json", timeout: 5000, // 设置超时时间为 5000 毫秒 (5 秒)
@@ -248,14 +272,34 @@ function syncByTabScore() {
 function syncByTabContest() {
     syncAllData()
     if (contestsList != null) {
-        const contestTabList = $("#add-contest-tab-user-list")
+        const contestTabList = $("#add-contest-tab-list")
         contestTabList.empty()
         for (let i = 0; i < contestsList.length; i++) {
             const contest = contestsList[i]
-            // todo 这里加结束比赛的按钮
-            contestTabList.append(`<li class='list-group-item'> ${contest["Name"]} </li>`)
+            let endBtn = ``
+            if (!contest["IsEnd"]) {
+                endBtn = ` <button type="button" class="btn btn-primary btn-sm" onclick="endContest(${contest['ID']})">结束</button>`
+            }
+            contestTabList.append(`<li class='list-group-item'> ${contest["Name"]}  ${endBtn} </li>`)
         }
     }
+}
+
+
+function endContest(id) {
+    $.ajax({
+        url: `./../api/score/report/contest/${id}/end`,
+        type: 'POST',
+        async: false,
+        timeout: 5000, // 设置超时时间为 5000 毫秒 (5 秒)
+        success: function (response) {
+            console.log(response)
+            syncByTabContest()
+        },
+        error: function (xhr, status, error) {
+            alert(`结束比赛失败 ${error} \n${xhr} \n${status}`)
+        }
+    });
 }
 
 function syncContestScore(select) {
