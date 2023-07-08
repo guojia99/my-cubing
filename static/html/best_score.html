@@ -7,61 +7,74 @@
 
     <title>最佳成绩汇总</title>
     <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/footer.css">
 </head>
 <body>
-
-<div class="row" style="margin-top: 20px;">
-    <div class="col-md-1"></div>
-    <div class="col-md-10">
-        <ul class="nav">
-            <li class="nav-item"><a class="nav-link active" href="../">主页</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">最佳成绩汇总</a></li>
-            <li class="nav-item"><a class="nav-link disabled" href="#">待开发</a></li>
-        </ul>
-    </div>
-    <div class="col-md-1"></div>
-</div>
-
-<div class="container-fluid" style="margin-top: 30px">
-    <div class="row">
+<div  style="min-height: 100vh">
+    <div class="row" style="margin-top: 20px;">
         <div class="col-md-1"></div>
         <div class="col-md-10">
-            <div class="row">
-                <div class="col-md-12" style="margin-top: 20px;margin-bottom: 20px">
-                    <h3 class="text-center">最佳成绩</h3>
-                    <table class="table table-bordered table-striped" style="text-align:center">
-                        <caption>群R：各个项目最佳排名</caption>
-                        <thead>
-                        <tr>
-                            <th scope="col">项目</th>
-                            <th scope="col" colspan="2">单次</th>
-                            <th scope="col" colspan="2">平均</th>
-                        </tr>
-                        </thead>
-                        <tbody id="best_table_body"></tbody>
-                    </table>
-                    <h3 class="text-center">排名总和</h3>
-                    <table class="table table-bordered table-striped" style="text-align:center">
-                        <caption>群总成绩排名汇总： 各个项目在群总排名的成绩</caption>
-                        <thead>
-                        <tr>
-                            <th>排名</th>
-                            <th scope="col" colspan="2">单次</th>
-                            <th scope="col" colspan="2">平均</th>
-                            <th>排名</th>
-                        </tr>
-                        </thead>
-                        <tbody id="sor_table_body"></tbody>
-                    </table>
-                </div>
-            </div>
-
-
-            <div class="row" id="all_project_body"></div>
+            <ul class="nav">
+                <li class="nav-item"><a class="nav-link active" href="../">主页</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">最佳成绩汇总</a></li>
+                <li class="nav-item"><a class="nav-link disabled" href="#">待开发</a></li>
+            </ul>
         </div>
         <div class="col-md-1"></div>
     </div>
+
+    <div class="container-fluid" style="margin-top: 30px">
+        <div class="row">
+            <div class="col-md-1"></div>
+            <div class="col-md-10">
+                <div class="row">
+                    <div class="col-md-12" style="margin-top: 20px;margin-bottom: 20px">
+                        <h3 class="text-center">最佳成绩</h3>
+                        <table class="table table-bordered table-striped" style="text-align:center">
+                            <caption>群R：各个项目最佳排名</caption>
+                            <thead>
+                            <tr>
+                                <th scope="col">项目</th>
+                                <th scope="col" colspan="2">单次</th>
+                                <th scope="col" colspan="2">平均</th>
+                            </tr>
+                            </thead>
+                            <tbody id="best_table_body"></tbody>
+                        </table>
+                        <h3 class="text-center">排名总和</h3>
+                        <table class="table table-bordered table-striped" style="text-align:center">
+                            <caption>群总成绩排名汇总： 各个项目在群总排名的成绩</caption>
+                            <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th scope="col" colspan="2">单次</th>
+                                <th scope="col" colspan="2">平均</th>
+                                <th>排名</th>
+                            </tr>
+                            </thead>
+                            <tbody id="sor_table_body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+
+                <div class="row" id="all_project_body"></div>
+            </div>
+            <div class="col-md-1"></div>
+        </div>
+    </div>
+
+
 </div>
+
+
+<footer>
+    <div class="footer_content">
+        <div class="footer_right">Copyright ©  2023 魔缘魔方赛事系统 <a href="http://beian.miit.gov.cn/">粤ICP备XXXXXXXX号</a></div>
+        <div>Powered by <a href="https://github.com/guojia" target="_black">郭泽嘉</a></div>
+    </div>
+</footer>
+
 
 <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/js/bootstrap.min.js"></script>
 <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
@@ -74,6 +87,7 @@
         syncAllProjectScores()
     })();
 </script>
+
 
 </body>
 </html>

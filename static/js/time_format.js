@@ -5,13 +5,16 @@
  */
 
 
-function formatTimeByProject(number, project) {
+function formatTimeByProject(number, project, isAvg) {
+    if (isAvg){
+        return "-"
+    }
     if (typeof number !== "number" || isNaN(number) || number < 0) {
         return "Invalid input";
     }
 
     // Check if the project is '最少步'
-    const isMinSteps = project === "最少步";
+    const isMinSteps = (project === "最少步" || project === "多盲");
 
     // Convert seconds to minutes, seconds, and milliseconds
     const minutes = Math.floor(number / 60);

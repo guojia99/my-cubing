@@ -79,6 +79,7 @@ func ReadContests(ctx *gin.Context) {
 			ID:          contest.ID,
 			Name:        contest.Name,
 			Routes:      route,
+			IsEnd:       contest.IsEnd,
 			Description: contest.Description,
 			StartTime:   contest.StartTime.Unix(),
 			EndTime:     contest.EndTime.Unix(),

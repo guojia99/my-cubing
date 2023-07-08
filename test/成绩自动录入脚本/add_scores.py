@@ -56,7 +56,8 @@ def run(d: dict):
         if resp.status_code != 200:
             print(resp.json())
 
-    requests.request("POST", f"http://127.0.0.1:14023/api/score/report/contest/{contest_id}/end")
+    if d.get("end"):
+        requests.request("POST", f"http://127.0.0.1:14023/api/score/report/contest/{contest_id}/end")
 
 
 if __name__ == "__main__":
@@ -94,27 +95,33 @@ if __name__ == "__main__":
     contests = [
         {
             "csv_file_path": './scores/魔缘20230525第一期群赛赛果.csv',
-            "contest_name": "魔缘2023第一期群赛"
+            "contest_name": "魔缘2023第一期群赛",
+            "end": True,
         },
         {
             "csv_file_path": './scores/魔缘20230605第二期群赛赛果.csv',
-            "contest_name": "魔缘2023第二期群赛"
+            "contest_name": "魔缘2023第二期群赛",
+            "end": True,
         },
         {
             "csv_file_path": './scores/魔缘20230612第三期群赛赛果.csv',
-            "contest_name": "魔缘2023第三期群赛"
+            "contest_name": "魔缘2023第三期群赛",
+            "end": True,
         },
         {
             "csv_file_path": './scores/魔缘20230618第四期群赛赛果.csv',
-            "contest_name": "魔缘2023第四期群赛"
+            "contest_name": "魔缘2023第四期群赛",
+            "end": True,
         },
         {
             "csv_file_path": './scores/魔缘20230626第五期群赛赛果.csv',
-            "contest_name": "魔缘2023第五期群赛"
+            "contest_name": "魔缘2023第五期群赛",
+            "end": True,
         },
         {
             "csv_file_path": './scores/魔缘20230702第六期群赛赛果.csv',
-            "contest_name": "魔缘2023第六期群赛"
+            "contest_name": "魔缘2023第六期群赛",
+            "end": False,
         },
     ]
 
