@@ -35,8 +35,7 @@ function syncContest() {
         success: function (response) {
             const projectBody = $("#all_project_body")
             document.getElementById("contest_name").innerHTML = `${response["ContestName"]} 赛果`
-
-
+            console.log(response)
             for (let i = 0; i < response["ProjectList"].length; i++) {
                 let thByBestAndAvg = `<th scope="col">单次</th> <th scope="col">平均</th>`
                 let thBy1Project = `<th scope="col">还原1</th>`

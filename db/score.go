@@ -69,6 +69,8 @@ func (s *Score) SetResult(in []float64) error {
 			s.Avg = 0
 		default: // 正常去头尾
 			s.Avg = (in[1] + in[2] + in[3]) / 3
+			fmt.Println(s.Avg, in[1], in[2], in[3])
+			fmt.Println(in)
 		}
 		return nil
 	case Cube666, Cube777, Cube333FM, Cube333BF, Cube444BF, Cube555BF: // 三次的项目
