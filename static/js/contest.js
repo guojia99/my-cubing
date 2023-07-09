@@ -74,7 +74,7 @@ function syncContest() {
 
 
                     let trByBestAndAvg = `<td style="${bestStyle}">${formatTimeByProject(data[j]["Best"], project)} ${bestUpIcons}</td>
-                            <td style="${avgStyle}">${formatTimeByProject(data[j]["Avg"], project)} ${avgUpIcons}</td>`
+                            <td style="${avgStyle}">${formatTimeByProject(data[j]["Avg"])} ${avgUpIcons}</td>`
 
                     switch (project) {
                         case "最少步":
