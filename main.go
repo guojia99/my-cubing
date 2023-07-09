@@ -6,8 +6,12 @@
 
 package main
 
-import "my-cubing/web"
+import (
+	"my-cubing/db"
+	"my-cubing/web"
+)
 
 func main() {
+	db.Init()
 	web.NewClient().Run()
 }

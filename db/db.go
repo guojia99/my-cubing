@@ -26,7 +26,7 @@ type Config struct {
 	} `json:"db"`
 }
 
-func init() {
+func Init() {
 	configBody, err := os.ReadFile("./config.json")
 	if err != nil {
 		panic(err)
