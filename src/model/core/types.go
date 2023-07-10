@@ -24,3 +24,9 @@ type Podiums struct {
 	Silver int64        `json:"Silver"`
 	Copper int64        `json:"Copper"`
 }
+
+type SorScore struct {
+	Player      model.Player `json:"Player"`
+	SingleCount int64        `json:"SingleCount"`
+	AvgCount    int64        `json:"Count"`
+}

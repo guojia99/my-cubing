@@ -22,9 +22,9 @@ type Core interface {
 	// GetAllPlayerBestScore 获取所有人最佳成绩
 	GetAllPlayerBestScore() (bestSingle, bestAvg map[model.Project][]model.Score)
 	// GetSorScore 获取排名总和
-	GetSorScore() (bestSingle, bestAvg []model.Score)
+	GetSorScore() (single, avg []SorScore)
 	// GetSorScoreByContest 获取某场比赛的排名总和
-	GetSorScoreByContest(contestID uint) (bestSingle, bestAvg []model.Score)
+	GetSorScoreByContest(contestID uint) (single, avg []SorScore)
 	// GetScoreByContest 获取某场比赛成绩排名
 	GetScoreByContest(contestID uint) map[model.Project][]RoutesScores
 	// GetPlayerScore 获取选手所有成绩
@@ -43,4 +43,59 @@ func NewScoreCore(db *gorm.DB) Core {
 		db:    db,
 		cache: cache.NewLRUExpireCache(255),
 	}
+}
+
+type client struct {
+	db    *gorm.DB
+	cache *cache.LRUExpireCache
+}
+
+func (c *client) ReloadCache() {
+	for _, key := range c.cache.Keys() {
+		c.cache.Remove(key)
+	}
+}
+
+func (c *client) StatisticalRecordsAndEndContest(contestId uint) {
+	c.ReloadCache()
+}
+
+func (c *client) GetBestScores() (bestSingle, bestAvg map[model.Project]model.Score) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *client) GetAllPlayerBestScore() (bestSingle, bestAvg map[model.Project][]model.Score) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *client) GetSorScore() (single, avg []SorScore) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *client) GetSorScoreByContest(contestID uint) (single, avg []SorScore) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *client) GetScoreByContest(contestID uint) map[model.Project][]RoutesScores {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *client) GetPlayerScore(playerID uint) (bestSingle, bestAvg []model.Score, scores []ScoresByContest) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *client) GetPodiumsByPlayer(playerID uint) Podiums {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *client) GetPodiumsByContest(contestID uint) []Podiums {
+	//TODO implement me
+	panic("implement me")
 }
