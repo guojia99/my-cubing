@@ -76,8 +76,8 @@ type (
 	}
 
 	GetContestScoresDetail struct {
-		Player string `json:"Player"`
 		db.Score
+		Player string `json:"Player"`
 	}
 
 	GetContestScoresPlayer struct {
