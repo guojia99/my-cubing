@@ -156,3 +156,18 @@ func (s *Score) IsBestAvgScore(other Score) bool {
 		return s.Avg < other.Avg
 	}
 }
+
+// SortScores 给成绩列表按WCA名次排序
+func SortScores(in []Score) {
+	sort.Slice(in, func(i, j int) bool {
+		switch in[i].Project {
+		case Cube333MBF, Cube333BF, Cube444BF, Cube555BF: // 盲规则, 以最佳为准
+			return in[i].IsBestScore(in[j])
+		default:
+			if in[i].Avg+in[j].Avg == 0 { // 都没有平均成绩
+				return in[i].IsBestScore(in[j])
+			}
+			return in[i].IsBestAvgScore(in[j])
+		}
+	})
+}
