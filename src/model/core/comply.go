@@ -12,6 +12,7 @@ import (
 	"github.com/guojia99/my-cubing/src/model"
 )
 
+// getBestScores 获取所有成绩中最佳成绩
 func (c *client) getBestScores() (bestSingle, bestAvg map[model.Project]model.Score) {
 	for _, project := range model.WCAProjectRoute() {
 		var best, avg model.Score
@@ -33,6 +34,7 @@ func (c *client) getBestScores() (bestSingle, bestAvg map[model.Project]model.Sc
 	return
 }
 
+// getAllPlayerBestScore 获取所有玩家各自的全项目最佳成绩
 func (c *client) getAllPlayerBestScore() (bestSingle, bestAvg map[model.Project][]model.Score) {
 	bestSingle, bestAvg = make(map[model.Project][]model.Score), make(map[model.Project][]model.Score)
 
@@ -70,6 +72,7 @@ func (c *client) getAllPlayerBestScore() (bestSingle, bestAvg map[model.Project]
 	return
 }
 
+// getSorScore 获取所有玩家的Sor排名
 func (c *client) getSorScore() (single, avg []SorScore) {
 	var players []model.Player
 	c.db.Find(&players)
@@ -117,12 +120,12 @@ func (c *client) getSorScore() (single, avg []SorScore) {
 	return
 }
 
-func (c *client) getSorScoreByContest(contestID uint) (single, avg []SorScore) {
-	//TODO implement me
-	panic("implement me")
+func (c *client) getScoreByContest(contestID uint) map[model.Project][]RoutesScores {
+	var scores []model.Score
+	c.db.Where("contest_id = ?", contestID).Find(&scores)
 }
 
-func (c *client) getScoreByContest(contestID uint) map[model.Project][]RoutesScores {
+func (c *client) getSorScoreByContest(contestID uint) (single, avg []SorScore) {
 	//TODO implement me
 	panic("implement me")
 }
