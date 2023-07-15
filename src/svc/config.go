@@ -14,6 +14,7 @@ import (
 
 type Config struct {
 	GinMode    string   `json:"GinMode"`
+	Debug      bool     `json:"Debug"`
 	Port       int      `json:"Port"`
 	StaticPath string   `json:"StaticPath"`
 	DB         DBConfig `json:"DB"`

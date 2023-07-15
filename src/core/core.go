@@ -7,6 +7,9 @@
 package core
 
 import (
+	"fmt"
+	"time"
+
 	"gorm.io/gorm"
 	"k8s.io/apimachinery/pkg/util/cache"
 
@@ -43,17 +46,22 @@ type (
 		GetPodiumsByPlayer(playerID uint) Podiums
 		// GetPodiumsByContest 获取比赛的领奖台数据
 		GetPodiumsByContest(contestID uint) []Podiums
+		// GetAllPodium 获取全部人的领奖台排行
+		GetAllPodium() []Podiums
 	}
 )
 
-func NewScoreCore(db *gorm.DB) Core {
+func NewScoreCore(db *gorm.DB, debug bool) Core {
 	return &client{
+		debug: debug,
 		db:    db,
 		cache: cache.NewLRUExpireCache(255),
 	}
 }
 
 type client struct {
+	debug bool
+
 	db    *gorm.DB
 	cache *cache.LRUExpireCache
 }
@@ -65,10 +73,12 @@ func (c *client) ReloadCache() {
 }
 
 func (c *client) AddScore(playerName string, contestID uint, project model.Project, routeNum int, result []float64) error {
+	defer c.ReloadCache()
 	return c.addScore(playerName, contestID, project, routeNum, result)
 }
 
 func (c *client) RemoveScore(playerName string, contestID uint, project model.Project, routeNum int) error {
+	defer c.ReloadCache()
 	return c.removeScoreByContestID(playerName, contestID, project, routeNum)
 }
 
@@ -78,41 +88,101 @@ func (c *client) StatisticalRecordsAndEndContest(contestId uint) error {
 }
 
 func (c *client) GetBestScores() (bestSingle, bestAvg map[model.Project]model.Score) {
-	//TODO implement me
-	panic("implement me")
+	key := "GetBestScores"
+	if val, ok := c.cache.Get(key); ok && !c.debug {
+		result := val.([2]map[model.Project]model.Score)
+		return result[0], result[1]
+	}
+
+	bestSingle, bestAvg = c.getBestScores()
+	c.cache.Add(key, [2]map[model.Project]model.Score{bestSingle, bestAvg}, time.Minute*15)
+	return
 }
 
 func (c *client) GetAllPlayerBestScore() (bestSingle, bestAvg map[model.Project][]model.Score) {
-	//TODO implement me
-	panic("implement me")
+	key := "GetAllPlayerBestScore"
+	if val, ok := c.cache.Get(key); ok && !c.debug {
+		result := val.([2]map[model.Project][]model.Score)
+		return result[0], result[1]
+	}
+
+	bestSingle, bestAvg = c.getAllPlayerBestScore()
+	c.cache.Add(key, [2]map[model.Project][]model.Score{bestSingle, bestAvg}, time.Minute*15)
+	return
 }
 
 func (c *client) GetSorScore() (single, avg []SorScore) {
-	//TODO implement me
-	panic("implement me")
+	key := "GetSorScore"
+	if val, ok := c.cache.Get(key); ok && !c.debug {
+		result := val.([2][]SorScore)
+		return result[0], result[1]
+	}
+
+	single, avg = c.getSorScore()
+	c.cache.Add(key, [2][]SorScore{single, avg}, time.Minute*15)
+	return
 }
 
 func (c *client) GetSorScoreByContest(contestID uint) (single, avg []SorScore) {
-	//TODO implement me
-	panic("implement me")
+	key := fmt.Sprintf("GetSorScoreByContest%d", contestID)
+
+	if val, ok := c.cache.Get(key); ok && !c.debug {
+		result := val.([2][]SorScore)
+		return result[0], result[1]
+	}
+
+	single, avg = c.getSorScoreByContest(contestID)
+	c.cache.Add(key, [2][]SorScore{single, avg}, time.Minute*15)
+	return
 }
 
 func (c *client) GetScoreByContest(contestID uint) map[model.Project][]RoutesScores {
-	//TODO implement me
-	panic("implement me")
+	key := fmt.Sprintf("GetScoreByContest%d", contestID)
+
+	if val, ok := c.cache.Get(key); ok && !c.debug {
+		return val.(map[model.Project][]RoutesScores)
+	}
+
+	out := c.getScoreByContest(contestID)
+	c.cache.Add(key, out, time.Minute*15)
+	return out
 }
 
 func (c *client) GetPlayerScore(playerID uint) (bestSingle, bestAvg []model.Score, scores []ScoresByContest) {
-	//TODO implement me
-	panic("implement me")
+	key := fmt.Sprintf("GetPlayerScore%d", playerID)
+	if val, ok := c.cache.Get(key); ok && !c.debug {
+		result := val.([]interface{})
+		return result[0].([]model.Score), result[1].([]model.Score), result[2].([]ScoresByContest)
+	}
+
+	bestSingle, bestAvg, scores = c.getPlayerScore(playerID)
+	c.cache.Add(key, []interface{}{bestSingle, bestAvg, scores}, time.Minute*15)
+	return
 }
 
 func (c *client) GetPodiumsByPlayer(playerID uint) Podiums {
-	//TODO implement me
-	panic("implement me")
+	key := fmt.Sprintf("GetPodiumsByPlayer%d", playerID)
+	if val, ok := c.cache.Get(key); ok && !c.debug {
+		return val.(Podiums)
+	}
+
+	out := c.getPodiumsByPlayer(playerID)
+	c.cache.Add(key, out, time.Minute*15)
+	return out
 }
 
 func (c *client) GetPodiumsByContest(contestID uint) []Podiums {
+	key := fmt.Sprintf("GetPodiumsByContest%d", contestID)
+	if val, ok := c.cache.Get(key); ok && !c.debug {
+		return val.([]Podiums)
+	}
+
+	out := c.getPodiumsByContest(contestID)
+	c.cache.Add(key, out, time.Minute*15)
+	return out
+}
+
+func (c *client) GetAllPodium() []Podiums {
 	//TODO implement me
 	panic("implement me")
 }

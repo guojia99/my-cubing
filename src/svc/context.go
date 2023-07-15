@@ -12,6 +12,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/guojia99/my-cubing/src/core"
+	"github.com/guojia99/my-cubing/src/core/model"
 )
 
 type Context struct {
@@ -37,10 +38,10 @@ func NewContext(config string) (*Context, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err = ctx.DB.AutoMigrate(core.Models...); err != nil {
+	if err = ctx.DB.AutoMigrate(model.Models...); err != nil {
 		return nil, err
 	}
 
-	ctx.Core = core.NewScoreCore(ctx.DB)
+	ctx.Core = core.NewScoreCore(ctx.DB, ctx.Cfg.Debug)
 	return ctx, nil
 }
