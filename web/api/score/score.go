@@ -177,7 +177,7 @@ func GetAllProjectBestScore(ctx *gin.Context) {
 	var out = GetAllProjectBestScoreResponse{
 		Data: make([]BestScore, 0),
 	}
-	for _, project := range db.ProjectList() {
+	for _, project := range db.WCAProjectRoute() {
 		if project == db.Cube333MBF {
 			continue
 		}
@@ -233,7 +233,7 @@ func GetProjectScores(ctx *gin.Context) {
 		Avg:         make(map[string][]ProjectScores),
 		Best:        make(map[string][]ProjectScores),
 	}
-	for _, project := range db.ProjectList() {
+	for _, project := range db.WCAProjectRoute() {
 		out.ProjectList = append(out.ProjectList, project.Cn())
 		out.Best[project.Cn()] = make([]ProjectScores, 0)
 		out.Avg[project.Cn()] = make([]ProjectScores, 0)
@@ -241,7 +241,7 @@ func GetProjectScores(ctx *gin.Context) {
 
 	// 2. 这个角色查所有的项目最佳成绩
 	for _, player := range players {
-		for _, project := range db.ProjectList() {
+		for _, project := range db.WCAProjectRoute() {
 			// 多盲需要独立查询
 			if project == db.Cube333MBF {
 				continue
@@ -276,7 +276,7 @@ func GetProjectScores(ctx *gin.Context) {
 	}
 
 	// 3. 给所有的项目排序
-	for _, project := range db.ProjectList() {
+	for _, project := range db.WCAProjectRoute() {
 		sort.Slice(out.Best[project.Cn()], func(i, j int) bool {
 			return out.Best[project.Cn()][i].IsBestScore(out.Best[project.Cn()][j].Score)
 		})
@@ -307,7 +307,7 @@ func GetSorScores(ctx *gin.Context) {
 		avgCache  = make(map[db.Project][]SorScoreDetail)
 	)
 
-	for _, project := range db.ProjectList() {
+	for _, project := range db.WCAProjectRoute() {
 		bestCache[project] = make([]SorScoreDetail, 0)
 		avgCache[project] = make([]SorScoreDetail, 0)
 
@@ -338,7 +338,7 @@ func GetSorScores(ctx *gin.Context) {
 	}
 
 	// 3. 排序
-	for _, project := range db.ProjectList() {
+	for _, project := range db.WCAProjectRoute() {
 		sort.Slice(bestCache[project], func(i, j int) bool {
 			return bestCache[project][i].IsBestScore(bestCache[project][j].Score)
 		})
@@ -353,12 +353,7 @@ func GetSorScores(ctx *gin.Context) {
 		playerCache[player.Name] = []SorScoreDetail{{Player: player.Name, Count: 0}, {Player: player.Name, Count: 0}}
 	}
 
-	for _, project := range db.ProjectList() {
-		// 过滤两个非官方项目
-		switch project {
-		case db.JuBaoHaoHao, db.OtherCola:
-			continue
-		}
+	for _, project := range db.WCAProjectRoute() {
 		for _, player := range players {
 			var bestAdd bool
 			var avgAdd bool
@@ -458,20 +453,22 @@ func GetContestScores(ctx *gin.Context) {
 		Data:        make(map[string][]GetContestScoresDetail),
 	}
 
-	var hasProject []db.Project
+	var hasProject = make(map[db.Project]struct{})
 	for k, _ := range scoreCache {
-		hasProject = append(hasProject, k)
-	}
-	sort.Slice(hasProject, func(i, j int) bool { return hasProject[i] < hasProject[j] })
-	for _, val := range hasProject {
-		out.ProjectList = append(out.ProjectList, val.Cn())
+		hasProject[k] = struct{}{}
 	}
 
-	for _, project := range hasProject {
+	for _, val := range db.WCAProjectRoute() {
+		if _, ok := hasProject[val]; ok {
+			out.ProjectList = append(out.ProjectList, val.Cn())
+		}
+	}
+
+	for project, _ := range hasProject {
 		ss := scoreCache[project]
 		sort.Slice(ss, func(i, j int) bool {
 			switch ss[i].Project {
-			case db.Cube333MBF: // 多盲规则
+			case db.Cube333MBF, db.Cube333BF, db.Cube444BF, db.Cube555BF: // 多盲规则
 				return ss[i].IsBestScore(ss[j].Score)
 			default:
 				if ss[i].Avg+ss[j].Avg == 0 { // 都没有平均成绩

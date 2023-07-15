@@ -60,6 +60,28 @@ func (p Project) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf("\"%s\"", p.Cn())), nil
 }
 
+func WCAProjectRoute() []Project {
+	return []Project{
+		Cube333,
+		Cube222,
+		Cube444,
+		Cube555,
+		Cube666,
+		Cube777,
+		Cube333BF,
+		Cube333FM,
+		Cube333OH,
+		CubeClock,
+		CubeMinx,
+		CubePy,
+		CubeSk,
+		CubeSq1,
+		Cube444BF,
+		Cube555BF,
+		Cube333MBF,
+	}
+}
+
 const (
 	Cube222 Project = iota + 1
 	Cube333
