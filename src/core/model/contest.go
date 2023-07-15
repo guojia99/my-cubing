@@ -1,6 +1,6 @@
 /*
  *  * Copyright (c) 2023 guojia99 All rights reserved.
- *  * Created: 2023/6/24 下午12:47.
+ *  * Created: 2023/7/11 下午6:12.
  *  * Author: guojia(https://github.com/guojia99)
  */
 
@@ -40,11 +40,12 @@ func (c *Contest) SetRoundIds(in []uint) *Contest {
 // Round 轮次及打乱
 type Round struct {
 	Model
-	Project Project `json:"Project" gorm:"column:project"` // 项目
-	Rank    int     `json:"Rank" gorm:"column:rank"`       // 轮次
-	Name    string  `json:"Name" grom:"column:name"`       // 名
-	Final   bool    `json:"Final" gorm:"column:final"`     // 是否是最后一轮
-	Upsets  string  `json:"Upsets" gorm:"column:upsets"`   // 打乱 UpsetDetail
+	ContestID uint    `json:"ContestID" gorm:"column:contest_id"` // 所属比赛
+	Project   Project `json:"Project" gorm:"column:project"`      // 项目
+	Number    int     `json:"Number" gorm:"column:number"`        // 轮次
+	Name      string  `json:"Name" grom:"column:name"`            // 名
+	Final     bool    `json:"Final" gorm:"column:final"`          // 是否是最后一轮
+	Upsets    string  `json:"Upsets" gorm:"column:upsets"`        // 打乱 UpsetDetail
 }
 
 func (r *Round) GetUpsets() []string {

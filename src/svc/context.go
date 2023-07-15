@@ -11,8 +11,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	"github.com/guojia99/my-cubing/src/model"
-	"github.com/guojia99/my-cubing/src/model/core"
+	"github.com/guojia99/my-cubing/src/core"
 )
 
 type Context struct {
@@ -38,7 +37,7 @@ func NewContext(config string) (*Context, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err = ctx.DB.AutoMigrate(model.Models...); err != nil {
+	if err = ctx.DB.AutoMigrate(core.Models...); err != nil {
 		return nil, err
 	}
 

@@ -1,6 +1,6 @@
 /*
  *  * Copyright (c) 2023 guojia99 All rights reserved.
- *  * Created: 2023/6/24 下午12:47.
+ *  * Created: 2023/7/11 下午6:12.
  *  * Author: guojia(https://github.com/guojia99)
  */
 
@@ -32,12 +32,8 @@ type Score struct {
 	Result5      float64 `json:"R5" gorm:"column:r5;NULL"`                          // 成绩5
 	Best         float64 `json:"Best" gorm:"column:best;NULL"`                      // 五把最好成绩
 	Avg          float64 `json:"Avg" gorm:"column:avg;NULL"`                        // 五把平均成绩
-	IsBestRecord bool    `json:"BestRecord" gorm:"column:is_best_record;NULL"`      // 打破了以往的最佳记录
-	IsAvgRecord  bool    `json:"AvgRecord" gorm:"column:is_avg_record;NULL"`        // 打破了以往的平均记录
-
-	// 非数据库字段
-	IsBestSingle bool `json:"IsBestSingle" gorm:"-"` // 这是比往期最佳的还好的成绩
-	IsBestAvg    bool `json:"IsBestAvg" gorm:"-"`    // 这是比往期最佳的成绩还好的平均成绩
+	IsBestSingle bool    `json:"IsBestSingle" gorm:"column:is_best_single"`         // 这是玩家比往期最佳的还好的成绩
+	IsBestAvg    bool    `json:"IsBestAvg" gorm:"column:is_best_avg"`               // 这是这个玩家比往期最佳的成绩还好的平均成绩
 }
 
 func (s *Score) SetResult(in []float64) error {
