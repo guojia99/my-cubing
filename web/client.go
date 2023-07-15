@@ -7,6 +7,8 @@
 package web
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 
 	"my-cubing/web/api"
@@ -17,7 +19,7 @@ type Client struct {
 	e *gin.Engine
 }
 
-func (c *Client) Run() {
+func (c *Client) Run(port string) {
 	c.e = gin.Default()
 	//c.e.Use(gin.Logger(), gin.Recovery())
 
@@ -25,7 +27,7 @@ func (c *Client) Run() {
 	api.AddApiRoute(route)
 	web.AddWebRoute(c.e)
 
-	if err := c.e.Run("0.0.0.0:14023"); err != nil {
+	if err := c.e.Run(fmt.Sprintf("0.0.0.0:%s", port)); err != nil {
 		panic(err)
 	}
 }

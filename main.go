@@ -7,11 +7,15 @@
 package main
 
 import (
+	"fmt"
+	"os"
+
 	"my-cubing/db"
 	"my-cubing/web"
 )
 
 func main() {
+	fmt.Println(os.Args)
 	db.Init()
-	web.NewClient().Run()
+	web.NewClient().Run(os.Args[1])
 }
