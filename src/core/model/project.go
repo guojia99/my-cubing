@@ -6,7 +6,13 @@
 
 package model
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
+
+func GetEnMap() map[Project]string { return cubeProjectEnCode }
+func GetCnMap() map[Project]string { return cubeProjectCnCode }
 
 func StrToProject(str string) Project {
 	for key, val := range cubeProjectEnCode {
@@ -18,6 +24,10 @@ func StrToProject(str string) Project {
 		if val == str {
 			return key
 		}
+	}
+
+	if p, err := strconv.Atoi(str); err == nil {
+		return Project(p)
 	}
 	return 0
 }

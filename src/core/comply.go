@@ -30,7 +30,7 @@ func (c *client) addScore(playerName string, contestID uint, project model.Proje
 
 	// 3. 玩家信息
 	var player = model.Player{Name: playerName}
-	if err = c.db.FirstOrCreate(&player, "name = ?", playerName).Error; err != nil {
+	if err = c.db.Where("name = ?", playerName).FirstOrCreate(&player).Error; err != nil {
 		return err
 	}
 
@@ -165,6 +165,8 @@ func (c *client) statisticalRecordsAndEndContest(contestID uint) (err error) {
 
 // getBestScores 获取所有成绩中最佳成绩
 func (c *client) getBestScores() (bestSingle, bestAvg map[model.Project]model.Score) {
+	bestSingle, bestAvg = make(map[model.Project]model.Score), make(map[model.Project]model.Score)
+
 	for _, project := range model.WCAProjectRoute() {
 		var best, avg model.Score
 		if project == model.Cube333MBF {
@@ -208,9 +210,15 @@ func (c *client) getAllPlayerBestScore() (bestSingle, bestAvg map[model.Project]
 				continue
 			}
 			if err := c.db.Where("player_id = ?", player.ID).Where("project = ?", project).Where("best != ?", 0).Order("best").First(&best).Error; err == nil {
+				var round model.Round
+				c.db.Where("id = ?", best.RouteID).First(&round)
+				best.RouteValue = round
 				bestSingle[project] = append(bestSingle[project], best)
 			}
 			if err := c.db.Where("player_id = ?", player.ID).Where("project = ?", project).Where("avg != ?", 0).Order("avg").First(&avg).Error; err == nil {
+				var round model.Round
+				c.db.Where("id = ?", avg.RouteID).First(&round)
+				avg.RouteValue = round
 				bestAvg[project] = append(bestAvg[project], avg)
 			}
 		}
@@ -263,7 +271,7 @@ func (c *client) getSorScore() (single, avg []SorScore) {
 
 	for _, val := range playerCache {
 		single = append(single, SorScore{Player: val.Player, SingleCount: val.SingleCount})
-		avg = append(avg, SorScore{Player: val.Player, SingleCount: val.AvgCount})
+		avg = append(avg, SorScore{Player: val.Player, AvgCount: val.AvgCount})
 	}
 
 	sort.Slice(single, func(i, j int) bool { return single[i].SingleCount < single[j].SingleCount })
@@ -438,15 +446,17 @@ func (c *client) getPodiumsByPlayer(playerID uint) Podiums {
 	var out = Podiums{Player: player}
 
 	// 查选手参加过的所有比赛且结束的
-	var contestId []uint
-	c.db.Model(&model.Score{}).Distinct("contest_id").Where("is_end = ?", 1).Where("player_id = ?", playerID).Pluck("player_id", &contestId)
-	if len(contestId) == 0 {
+	var cacheContestId []uint
+	c.db.Model(&model.Score{}).Distinct("contest_id").Where("player_id = ?", playerID).Pluck("player_id", &cacheContestId)
+	if len(cacheContestId) == 0 {
 		return out
 	}
+	var contests []model.Contest
+	c.db.Where("is_end = ?", 1).Find(&contests)
 
 	// 查选手所有比赛的成绩
-	for _, id := range contestId {
-		topThree := c.getContestTop(id, 3)
+	for _, contest := range contests {
+		topThree := c.getContestTop(contest.ID, 3)
 		for _, score := range topThree {
 			for idx, val := range score {
 				if val.PlayerID == playerID {
@@ -571,14 +581,17 @@ func (c *client) getPodiumsByContest(contestID uint) (out []Podiums) {
 		}
 		out = append(out, podiums)
 	}
-	sort.Slice(out, func(i, j int) bool {
-		if out[i].Gold == out[j].Gold {
-			if out[i].Silver == out[j].Silver {
-				return out[i].Bronze > out[j].Bronze
-			}
-			return out[i].Silver > out[j].Silver
-		}
-		return out[i].Gold > out[j].Gold
-	})
+	SortPodiums(out)
 	return
+}
+
+func (c *client) getAllPodium() []Podiums {
+	var players []model.Player
+	_ = c.db.Find(&players)
+	var out []Podiums
+	for _, player := range players {
+		out = append(out, c.getPodiumsByPlayer(player.ID))
+	}
+	SortPodiums(out)
+	return out
 }

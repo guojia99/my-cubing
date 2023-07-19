@@ -12,7 +12,7 @@ import (
 
 type Model struct {
 	ID        uint      `gorm:"primaryKey;column:id"`
-	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at"`
+	CreatedAt time.Time `json:"-" gorm:"autoCreateTime;column:created_at"`
 }
 
 var Models = []interface{}{

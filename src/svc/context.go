@@ -7,6 +7,9 @@
 package svc
 
 import (
+	"time"
+
+	cache "github.com/patrickmn/go-cache"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -16,14 +19,16 @@ import (
 )
 
 type Context struct {
-	DB   *gorm.DB
-	Cfg  *Config
-	Core core.Core
+	DB    *gorm.DB
+	Cfg   *Config
+	Core  core.Core
+	Cache *cache.Cache
 }
 
 func NewContext(config string) (*Context, error) {
 	ctx := &Context{
-		Cfg: &Config{},
+		Cfg:   &Config{},
+		Cache: cache.New(time.Minute, time.Minute),
 	}
 	if err := ctx.Cfg.Load(config); err != nil {
 		return nil, err

@@ -34,6 +34,8 @@ type Score struct {
 	Avg          float64 `json:"Avg" gorm:"column:avg;NULL"`                        // 五把平均成绩
 	IsBestSingle bool    `json:"IsBestSingle" gorm:"column:is_best_single"`         // 这是玩家比往期最佳的还好的成绩
 	IsBestAvg    bool    `json:"IsBestAvg" gorm:"column:is_best_avg"`               // 这是这个玩家比往期最佳的成绩还好的平均成绩
+
+	RouteValue Round `json:"RouteValue" gorm:"-"` // 轮次实际内容
 }
 
 func (s *Score) SetResult(in []float64) error {

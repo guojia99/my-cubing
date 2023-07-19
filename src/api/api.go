@@ -14,7 +14,9 @@ import (
 	"github.com/guojia99/my-cubing/src/svc"
 )
 
-func NewClient(s *svc.Context) *Client { return &Client{svc: s} }
+func NewClient(s *svc.Context) *Client {
+	return &Client{svc: s}
+}
 
 type Client struct {
 	e   *gin.Engine
@@ -22,9 +24,12 @@ type Client struct {
 }
 
 func (c *Client) Run() error {
+	c.initAuth()
+
 	gin.SetMode(c.svc.Cfg.GinMode)
 	c.e = gin.New()
-	c.e.Use(gin.Logger(), gin.Recovery())
+	c.e.Use(gin.Logger(), gin.Recovery(), NewRateMiddleware(20))
+	c.initRoute()
 
 	return c.e.Run(fmt.Sprintf("0.0.0.0:%d", c.svc.Cfg.Port))
 }

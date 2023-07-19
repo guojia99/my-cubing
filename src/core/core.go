@@ -34,6 +34,8 @@ type (
 		GetBestScores() (bestSingle, bestAvg map[model.Project]model.Score)
 		// GetAllPlayerBestScore 获取所有人最佳成绩
 		GetAllPlayerBestScore() (bestSingle, bestAvg map[model.Project][]model.Score)
+		// GetAllPlayerBestScoreByProject 获取某个项目最佳成绩
+		GetAllPlayerBestScoreByProject(project model.Project) (bestSingle, bestAvg []model.Score)
 		// GetSorScore 获取排名总和
 		GetSorScore() (single, avg []SorScore)
 		// GetSorScoreByContest 获取某场比赛的排名总和
@@ -48,6 +50,10 @@ type (
 		GetPodiumsByContest(contestID uint) []Podiums
 		// GetAllPodium 获取全部人的领奖台排行
 		GetAllPodium() []Podiums
+		// GetRecordByContest 获取一场比赛中的记录
+		GetRecordByContest(contestID uint) []model.Record
+		// GetRecordByPlayer 获取一个人的记录
+		GetRecordByPlayer(playerID uint) []model.Record
 	}
 )
 
@@ -73,18 +79,27 @@ func (c *client) ReloadCache() {
 }
 
 func (c *client) AddScore(playerName string, contestID uint, project model.Project, routeNum int, result []float64) error {
-	defer c.ReloadCache()
-	return c.addScore(playerName, contestID, project, routeNum, result)
+	if err := c.addScore(playerName, contestID, project, routeNum, result); err != nil {
+		return err
+	}
+	c.ReloadCache()
+	return nil
 }
 
 func (c *client) RemoveScore(playerName string, contestID uint, project model.Project, routeNum int) error {
-	defer c.ReloadCache()
-	return c.removeScoreByContestID(playerName, contestID, project, routeNum)
+	if err := c.removeScoreByContestID(playerName, contestID, project, routeNum); err != nil {
+		return err
+	}
+	c.ReloadCache()
+	return nil
 }
 
 func (c *client) StatisticalRecordsAndEndContest(contestId uint) error {
-	defer c.ReloadCache()
-	return c.statisticalRecordsAndEndContest(contestId)
+	if err := c.statisticalRecordsAndEndContest(contestId); err != nil {
+		return err
+	}
+	c.ReloadCache()
+	return nil
 }
 
 func (c *client) GetBestScores() (bestSingle, bestAvg map[model.Project]model.Score) {
@@ -109,6 +124,11 @@ func (c *client) GetAllPlayerBestScore() (bestSingle, bestAvg map[model.Project]
 	bestSingle, bestAvg = c.getAllPlayerBestScore()
 	c.cache.Add(key, [2]map[model.Project][]model.Score{bestSingle, bestAvg}, time.Minute*15)
 	return
+}
+
+func (c *client) GetAllPlayerBestScoreByProject(project model.Project) (bestSingle, bestAvg []model.Score) {
+	best, avg := c.GetAllPlayerBestScore()
+	return best[project], avg[project]
 }
 
 func (c *client) GetSorScore() (single, avg []SorScore) {
@@ -183,6 +203,21 @@ func (c *client) GetPodiumsByContest(contestID uint) []Podiums {
 }
 
 func (c *client) GetAllPodium() []Podiums {
+	key := "GetAllPodium"
+	if val, ok := c.cache.Get(key); ok && !c.debug {
+		return val.([]Podiums)
+	}
+	out := c.getAllPodium()
+	c.cache.Add(key, out, time.Minute*5)
+	return out
+}
+
+func (c *client) GetRecordByContest(contestID uint) []model.Record {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *client) GetRecordByPlayer(playerID uint) []model.Record {
 	//TODO implement me
 	panic("implement me")
 }

@@ -6,7 +6,11 @@
 
 package core
 
-import "github.com/guojia99/my-cubing/src/core/model"
+import (
+	"sort"
+
+	"github.com/guojia99/my-cubing/src/core/model"
+)
 
 type RoutesScores struct {
 	Round  model.Round   `json:"Round"`
@@ -28,5 +32,17 @@ type Podiums struct {
 type SorScore struct {
 	Player      model.Player `json:"Player"`
 	SingleCount int64        `json:"SingleCount"`
-	AvgCount    int64        `json:"Count"`
+	AvgCount    int64        `json:"AvgCount"`
+}
+
+func SortPodiums(in []Podiums) {
+	sort.Slice(in, func(i, j int) bool {
+		if in[i].Gold == in[j].Gold {
+			if in[i].Silver == in[j].Silver {
+				return in[i].Bronze > in[j].Bronze
+			}
+			return in[i].Silver > in[j].Silver
+		}
+		return in[i].Gold > in[j].Gold
+	})
 }

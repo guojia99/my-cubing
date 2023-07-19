@@ -6,44 +6,58 @@
 
 package api
 
+import (
+	swagFile "github.com/swaggo/files"
+	"github.com/swaggo/gin-swagger"
+
+	"github.com/guojia99/my-cubing/src/api/report"
+	"github.com/guojia99/my-cubing/src/api/result"
+)
+
 func (c *Client) initRoute() {
+	api := c.e.Group("/v2/api")
+	api.GET("/swagger/*any", ginSwagger.WrapHandler(swagFile.Handler))
 
-	api := c.e.Group("/api")
 	{
-		user := api.Group("/user")
-		user.POST("")
+		// 基础查询
+		api.GET("/contest", result.GetContests(c.svc))
+		api.GET("/player", result.GetPlayers(c.svc))
+		api.GET("/project_map", result.GetProjectMap(c.svc)) // 项目映射表
 	}
 
 	{
-		contest := api.Group("/contest")
-		contest.GET("/")
-		contest.POST("/")
-		contest.DELETE("/")
+		// 后台
+		api.GET("/auth/token", c.GetToken) // 获取授权
 
-		player := api.Group("/player")
-		player.GET("/")
-		player.POST("/")
-		player.DELETE("/")
+		api.POST("/contest", c.AuthMiddleware, result.CreateContest(c.svc))               // 添加比赛
+		api.DELETE("/contest/:contest_id", c.AuthMiddleware, result.DeleteContest(c.svc)) // 删除比赛
+
+		api.POST("/player", c.AuthMiddleware, result.CreatePlayer(c.svc)) //  添加玩家或修改玩家
+
+		api.POST("/score", c.AuthMiddleware, result.CreateScore(c.svc))           // 上传成绩
+		api.DELETE("/score", c.AuthMiddleware, result.DeleteScore(c.svc))         // 删除成绩
+		api.PUT("/score/end_contest", c.AuthMiddleware, result.EndContest(c.svc)) // 结束比赛并统计
+
 	}
 
 	{
-		score := api.Group("/score")
-		score.GET("/player/:player_name/contest/:contest_id")    // 上传成绩
-		score.DELETE("/player/:player_name/contest/:contest_id") // 删除成绩
-		score.POST("/contest/:contest_id/end")                   // 结束比赛并统计
-	}
+		// 榜单
+		rp := api.Group("/report")
+		{
+			// 排行榜
+			rp.GET("/best/score", report.BestReport(c.svc))              // 获取最佳成绩榜单，每个项目仅有一个单次和平均
+			rp.GET("/best/all_scores", report.BestAllScoreReport(c.svc)) // 获取项目每个玩家最佳成绩
+			rp.GET("/best/sor", report.BestSorReport(c.svc))             // 获取所有角色的sor汇总榜单
+			rp.GET("/best/podium", report.BestPodiumReport(c.svc))       // 获取所有玩家领奖台的排行
 
-	{
-		report := api.Group("/report")
-		report.GET("/project_best_score")         // 所有角色所有成绩的最佳列表， 按project分类
-		report.GET("/best_score")                 // 所有成绩最佳， 仅有一个单次和平均
-		report.GET("/sor")                        // sor成绩统计
-		report.GET("/sor/contest/:contest_id")    // 某比赛的sor
-		report.GET("/contest/:contest_id/score")  // 某比赛的成绩统计
-		report.GET("/contest/:contest_id/podium") // 某场比赛领奖台
-		report.GET("/player/:player_name")        // 某个玩家的成绩汇总
-		report.GET("/player/:player_name/podium") // 某个玩家的领奖台
-		report.GET("/podium")                     // 获取所有玩家领奖台的排行
-	}
+			// 具体到比赛
+			rp.GET("/contest/:contest_id/sor", report.ContestSorReport(c.svc))       // 某比赛的sor
+			rp.GET("/contest/:contest_id/score", report.ContestScoreReport(c.svc))   // 某比赛的成绩统计
+			rp.GET("/contest/:contest_id/podium", report.ContestPodiumReport(c.svc)) // 某场比赛领奖台
 
+			// 具体到个人
+			rp.GET("/player/:player_name/podium", report.PlayerPodiumReport(c.svc)) // 某个玩家的领奖台
+			rp.GET("/player/:player_name/score", report.PlayerScoreReport(c.svc))   // 某个玩家的成绩汇总
+		}
+	}
 }

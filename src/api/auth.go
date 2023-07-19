@@ -1,0 +1,124 @@
+/*
+ *  * Copyright (c) 2023 guojia99 All rights reserved.
+ *  * Created: 2023/7/17 下午5:06.
+ *  * Author: guojia(https://github.com/guojia99)
+ */
+
+package api
+
+import (
+	"crypto/rand"
+	"encoding/base64"
+	"fmt"
+	"log"
+	"net/http"
+	"strconv"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
+)
+
+type Admin struct {
+	gorm.Model
+	UserName string    `gorm:"column:user_name"`
+	Password string    `gorm:"column:password"`
+	Token    string    `gorm:"column:token"`
+	Timeout  time.Time `gorm:"column:timeout"`
+}
+
+func (c *Client) initAuth() {
+	_ = c.svc.DB.AutoMigrate(&Admin{})
+}
+
+type (
+	GetTokenRequest struct {
+		UserName string `header:"user_name"`
+		PassWord string `header:"password"`
+	}
+
+	GetTokenResponse struct {
+		Ts    int64  `json:"ts"`
+		Token string `json:"token"`
+	}
+)
+
+// GetToken 获取合法token
+func (c *Client) GetToken(ctx *gin.Context) {
+	var req GetTokenRequest
+	if err := ctx.BindHeader(&req); err != nil {
+		ctx.JSON(http.StatusNetworkAuthenticationRequired, gin.H{"error": err.Error()})
+		return
+	}
+
+	if req.UserName == "" || req.PassWord == "" {
+		ctx.JSON(http.StatusNetworkAuthenticationRequired, gin.H{"error": "request has empty"})
+		return
+	}
+	key := "auth_token" + req.PassWord + req.PassWord
+	if token, ok := c.svc.Cache.Get(key); ok {
+		ctx.JSON(http.StatusOK, token.(GetTokenResponse))
+		return
+	}
+	var admin Admin
+	if err := c.svc.DB.Where("user_name = ?", req.UserName).First(&admin).Error; err != nil {
+		ctx.JSON(http.StatusNetworkAuthenticationRequired, gin.H{"error": err.Error()})
+		return
+	}
+	if admin.Password != req.PassWord {
+		ctx.JSON(http.StatusNetworkAuthenticationRequired, gin.H{"error": "password error"})
+		return
+	}
+	if time.Now().Sub(admin.Timeout) > time.Hour*48 || admin.Token == "" {
+		admin.Token = generateUniqueToken(req.UserName, time.Now().Unix())
+		admin.Timeout = time.Now().Add(time.Hour * 48)
+		c.svc.DB.Save(&admin)
+	}
+
+	resp := GetTokenResponse{
+		Ts:    admin.Timeout.Unix(),
+		Token: admin.Token,
+	}
+	_ = c.svc.Cache.Add(key, resp, time.Minute*30)
+	ctx.JSON(http.StatusOK, resp)
+}
+
+func generateUniqueToken(username string, ts int64) string {
+	uniqueStr := username + strconv.FormatInt(ts, 10)
+	uniqueBytes := []byte(uniqueStr)
+	randomBytes := make([]byte, 255-len(uniqueBytes))
+	_, _ = rand.Read(randomBytes)
+	tokenBytes := append(uniqueBytes, randomBytes...)
+	token := base64.URLEncoding.EncodeToString(tokenBytes)
+	return token
+}
+
+// AuthMiddleware 授权中间件
+func (c *Client) AuthMiddleware(ctx *gin.Context) {
+	log.Printf("auth in %s", ctx.ClientIP())
+	token := ctx.GetHeader("token")
+	if token == "" {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "auth error"})
+		return
+	}
+
+	// token 可用，直接通过
+	if _, ok := c.svc.Cache.Get(token); ok {
+		ctx.Next()
+		return
+	}
+
+	// 查token 是否合法
+	var admin Admin
+	if err := c.svc.DB.Where("token = ?", token).First(&admin).Error; err != nil {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("auth error token %s", err)})
+		return
+	}
+	if time.Now().Sub(admin.Timeout) > 0 {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "token timeout"})
+		return
+	}
+
+	_ = c.svc.Cache.Add(admin.Token, admin.UserName, time.Minute)
+	ctx.Next()
+}
