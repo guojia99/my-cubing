@@ -156,7 +156,10 @@ func SortScores(in []Score) {
 			if in[i].Avg+in[j].Avg == 0 { // 都没有平均成绩
 				return in[i].IsBestScore(in[j])
 			}
-			return in[i].IsBestAvgScore(in[j])
+			if in[i].Avg == in[j].Avg { // 平均成绩相同以最佳排名
+				return in[i].IsBestScore(in[j])
+			}
+			return in[i].IsBestAvgScore(in[j]) // 其中一个有平均成绩的， 以平均成绩排序
 		}
 	})
 }

@@ -46,3 +46,10 @@ func SortPodiums(in []Podiums) {
 		return in[i].Gold > in[j].Gold
 	})
 }
+
+type RecordMessage struct {
+	Record  model.Record  `json:"Record"`
+	Player  model.Player  `json:"Player"`
+	Score   model.Score   `json:"Score"`
+	Contest model.Contest `json:"Contest"`
+}

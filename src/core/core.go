@@ -8,10 +8,11 @@ package core
 
 import (
 	"fmt"
+	"runtime"
 	"time"
 
+	"github.com/patrickmn/go-cache"
 	"gorm.io/gorm"
-	"k8s.io/apimachinery/pkg/util/cache"
 
 	"github.com/guojia99/my-cubing/src/core/model"
 )
@@ -51,9 +52,9 @@ type (
 		// GetAllPodium 获取全部人的领奖台排行
 		GetAllPodium() []Podiums
 		// GetRecordByContest 获取一场比赛中的记录
-		GetRecordByContest(contestID uint) []model.Record
+		GetRecordByContest(contestID uint) []RecordMessage
 		// GetRecordByPlayer 获取一个人的记录
-		GetRecordByPlayer(playerID uint) []model.Record
+		GetRecordByPlayer(playerID uint) []RecordMessage
 	}
 )
 
@@ -61,7 +62,7 @@ func NewScoreCore(db *gorm.DB, debug bool) Core {
 	return &client{
 		debug: debug,
 		db:    db,
-		cache: cache.NewLRUExpireCache(255),
+		cache: cache.New(time.Minute*15, time.Minute*15),
 	}
 }
 
@@ -69,13 +70,12 @@ type client struct {
 	debug bool
 
 	db    *gorm.DB
-	cache *cache.LRUExpireCache
+	cache *cache.Cache
 }
 
 func (c *client) ReloadCache() {
-	for _, key := range c.cache.Keys() {
-		c.cache.Remove(key)
-	}
+	c.cache.Flush()
+	runtime.GC()
 }
 
 func (c *client) AddScore(playerName string, contestID uint, project model.Project, routeNum int, result []float64) error {
@@ -110,7 +110,7 @@ func (c *client) GetBestScores() (bestSingle, bestAvg map[model.Project]model.Sc
 	}
 
 	bestSingle, bestAvg = c.getBestScores()
-	c.cache.Add(key, [2]map[model.Project]model.Score{bestSingle, bestAvg}, time.Minute*15)
+	_ = c.cache.Add(key, [2]map[model.Project]model.Score{bestSingle, bestAvg}, time.Minute*15)
 	return
 }
 
@@ -122,7 +122,7 @@ func (c *client) GetAllPlayerBestScore() (bestSingle, bestAvg map[model.Project]
 	}
 
 	bestSingle, bestAvg = c.getAllPlayerBestScore()
-	c.cache.Add(key, [2]map[model.Project][]model.Score{bestSingle, bestAvg}, time.Minute*15)
+	_ = c.cache.Add(key, [2]map[model.Project][]model.Score{bestSingle, bestAvg}, time.Minute*15)
 	return
 }
 
@@ -139,7 +139,7 @@ func (c *client) GetSorScore() (single, avg []SorScore) {
 	}
 
 	single, avg = c.getSorScore()
-	c.cache.Add(key, [2][]SorScore{single, avg}, time.Minute*15)
+	_ = c.cache.Add(key, [2][]SorScore{single, avg}, time.Minute*15)
 	return
 }
 
@@ -152,7 +152,7 @@ func (c *client) GetSorScoreByContest(contestID uint) (single, avg []SorScore) {
 	}
 
 	single, avg = c.getSorScoreByContest(contestID)
-	c.cache.Add(key, [2][]SorScore{single, avg}, time.Minute*15)
+	_ = c.cache.Add(key, [2][]SorScore{single, avg}, time.Minute*15)
 	return
 }
 
@@ -164,7 +164,7 @@ func (c *client) GetScoreByContest(contestID uint) map[model.Project][]RoutesSco
 	}
 
 	out := c.getScoreByContest(contestID)
-	c.cache.Add(key, out, time.Minute*15)
+	_ = c.cache.Add(key, out, time.Minute*15)
 	return out
 }
 
@@ -176,7 +176,7 @@ func (c *client) GetPlayerScore(playerID uint) (bestSingle, bestAvg []model.Scor
 	}
 
 	bestSingle, bestAvg, scores = c.getPlayerScore(playerID)
-	c.cache.Add(key, []interface{}{bestSingle, bestAvg, scores}, time.Minute*15)
+	_ = c.cache.Add(key, []interface{}{bestSingle, bestAvg, scores}, time.Minute*15)
 	return
 }
 
@@ -187,7 +187,7 @@ func (c *client) GetPodiumsByPlayer(playerID uint) Podiums {
 	}
 
 	out := c.getPodiumsByPlayer(playerID)
-	c.cache.Add(key, out, time.Minute*15)
+	_ = c.cache.Add(key, out, time.Minute*15)
 	return out
 }
 
@@ -198,7 +198,7 @@ func (c *client) GetPodiumsByContest(contestID uint) []Podiums {
 	}
 
 	out := c.getPodiumsByContest(contestID)
-	c.cache.Add(key, out, time.Minute*15)
+	_ = c.cache.Add(key, out, time.Minute*15)
 	return out
 }
 
@@ -208,16 +208,16 @@ func (c *client) GetAllPodium() []Podiums {
 		return val.([]Podiums)
 	}
 	out := c.getAllPodium()
-	c.cache.Add(key, out, time.Minute*5)
+	_ = c.cache.Add(key, out, time.Minute*5)
 	return out
 }
 
-func (c *client) GetRecordByContest(contestID uint) []model.Record {
+func (c *client) GetRecordByContest(contestID uint) []RecordMessage {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (c *client) GetRecordByPlayer(playerID uint) []model.Record {
+func (c *client) GetRecordByPlayer(playerID uint) []RecordMessage {
 	//TODO implement me
 	panic("implement me")
 }

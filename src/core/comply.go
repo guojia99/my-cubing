@@ -290,6 +290,7 @@ func (c *client) getScoreByContest(contestID uint) map[model.Project][]RoutesSco
 		if len(scores) == 0 {
 			continue
 		}
+		model.SortScores(scores)
 
 		// 按轮次分类
 		var routeCache = make(map[uint][]model.Score)
@@ -594,4 +595,25 @@ func (c *client) getAllPodium() []Podiums {
 	}
 	SortPodiums(out)
 	return out
+}
+
+func (c *client) getRecordByContest(contestID uint) []RecordMessage {
+	var out []RecordMessage
+
+	var contest model.Contest
+	if err := c.db.First(&contest, "id = ?", contestID); err != nil {
+		return out
+	}
+
+	var records []model.Record
+	if err := c.db.Where("contest_id = ?", contestID).Find(&records); err != nil {
+		return out
+	}
+
+	for _, record := range records {
+		var player model.Player
+		var score model.Score
+
+	}
+
 }
