@@ -44,8 +44,7 @@ func ContestSorReport(svc *svc.Context) gin.HandlerFunc {
 }
 
 type ContestScoreReportResponse struct {
-	WCAProjectList []model.Project                       `json:"WCAProjectList"`
-	Scores         map[model.Project][]core.RoutesScores `json:"Scores"`
+	Scores map[model.Project][]core.RoutesScores `json:"Scores"`
 }
 
 func ContestScoreReport(svc *svc.Context) gin.HandlerFunc {
@@ -56,8 +55,7 @@ func ContestScoreReport(svc *svc.Context) gin.HandlerFunc {
 			return
 		}
 		ctx.JSON(http.StatusOK, ContestScoreReportResponse{
-			WCAProjectList: model.WCAProjectRoute(),
-			Scores:         svc.Core.GetScoreByContest(req.ContestID),
+			Scores: svc.Core.GetScoreByContest(req.ContestID),
 		})
 	}
 }

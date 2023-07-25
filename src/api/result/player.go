@@ -53,3 +53,9 @@ func CreatePlayer(svc *svc.Context) gin.HandlerFunc {
 		ctx.JSON(http.StatusOK, gin.H{})
 	}
 }
+
+func DeletePlayer(svc *svc.Context) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+
+	}
+}

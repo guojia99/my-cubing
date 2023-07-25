@@ -11,7 +11,7 @@ import (
 )
 
 type Model struct {
-	ID        uint      `gorm:"primaryKey;column:id"`
+	ID        uint      `json:"ID" gorm:"primaryKey;column:id"`
 	CreatedAt time.Time `json:"-" gorm:"autoCreateTime;column:created_at"`
 }
 

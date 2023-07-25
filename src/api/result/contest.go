@@ -18,6 +18,27 @@ import (
 	"github.com/guojia99/my-cubing/src/svc"
 )
 
+type ContestRequest struct {
+	ContestID uint `uri:"contest_id"`
+}
+
+func GetContest(svc *svc.Context) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var req ContestRequest
+		if err := ctx.BindUri(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		var contest model.Contest
+		if err := svc.DB.First(&contest, "id = ?", req.ContestID).Error; err != nil {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+		ctx.JSON(http.StatusOK, contest)
+	}
+}
+
 type (
 	Contest struct {
 		Contest model.Contest `json:"Contest"`
@@ -51,7 +72,7 @@ func GetContests(svc *svc.Context) gin.HandlerFunc {
 
 		// Find Contests.
 		var contests []model.Contest
-		if err := svc.DB.Offset(offset).Limit(limit).Find(&contests).Error; err != nil {
+		if err := svc.DB.Order("created_at DESC").Offset(offset).Limit(limit).Find(&contests).Error; err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}

@@ -384,7 +384,7 @@ func (c *client) getSorScoreByContest(contestID uint) (single, avg []SorScore) {
 	}
 	for _, val := range playerCache {
 		single = append(single, SorScore{Player: val.Player, SingleCount: val.SingleCount})
-		avg = append(avg, SorScore{Player: val.Player, SingleCount: val.AvgCount})
+		avg = append(avg, SorScore{Player: val.Player, AvgCount: val.AvgCount})
 	}
 
 	sort.Slice(single, func(i, j int) bool { return single[i].SingleCount < single[j].SingleCount })
@@ -613,7 +613,15 @@ func (c *client) getRecordByContest(contestID uint) []RecordMessage {
 	for _, record := range records {
 		var player model.Player
 		var score model.Score
+		_ = c.db.First(&player, "id = ?", record.PlayerID).Error
+		_ = c.db.First(&score, "id = ?", record.ScoreId).Error
 
+		out = append(out, RecordMessage{
+			Record:  record,
+			Player:  player,
+			Score:   score,
+			Contest: contest,
+		})
 	}
-
+	return out
 }
