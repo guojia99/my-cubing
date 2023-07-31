@@ -6,32 +6,6 @@
 
 package model
 
-import (
-	"fmt"
-	"strconv"
-)
-
-func GetEnMap() map[Project]string { return cubeProjectEnCode }
-func GetCnMap() map[Project]string { return cubeProjectCnCode }
-
-func StrToProject(str string) Project {
-	for key, val := range cubeProjectEnCode {
-		if val == str {
-			return key
-		}
-	}
-	for key, val := range cubeProjectCnCode {
-		if val == str {
-			return key
-		}
-	}
-
-	if p, err := strconv.Atoi(str); err == nil {
-		return Project(p)
-	}
-	return 0
-}
-
 func WCAProjectRoute() []Project {
 	return []Project{
 		Cube333,
@@ -54,56 +28,31 @@ func WCAProjectRoute() []Project {
 	}
 }
 
-type Project int
+type Project string
 
-func (p Project) String() string               { return cubeProjectEnCode[p] }
-func (p Project) Cn() string                   { return cubeProjectCnCode[p] }
-func (p Project) MarshalJSON() ([]byte, error) { return []byte(fmt.Sprintf("\"%s\"", p.Cn())), nil }
+func (p Project) Cn() string { return cubeProjectCnCode[p] }
 
 const (
-	Cube222 Project = iota + 1
-	Cube333
-	Cube444
-	Cube555
-	Cube666
-	Cube777
-	CubeSk
-	CubePy
-	CubeSq1
-	CubeMinx
-	CubeClock
-	Cube333OH
-	Cube333FM
-	Cube333BF
-	Cube444BF
-	Cube555BF
-	Cube333MBF
-	JuBaoHaoHao
-	OtherCola
+	JuBaoHaoHao Project = "jhh"
+	OtherCola   Project = "o_cola"
+	Cube222     Project = "222"
+	Cube333     Project = "333"
+	Cube444     Project = "444"
+	Cube555     Project = "555"
+	Cube666     Project = "666"
+	Cube777     Project = "777"
+	CubeSk      Project = "skewb"
+	CubePy      Project = "pyram"
+	CubeSq1     Project = "sq1"
+	CubeMinx    Project = "minx"
+	CubeClock   Project = "clock"
+	Cube333OH   Project = "333oh"
+	Cube333FM   Project = "333fm"
+	Cube333BF   Project = "333bf"
+	Cube444BF   Project = "444bf"
+	Cube555BF   Project = "555bf"
+	Cube333MBF  Project = "333mbf"
 )
-
-var cubeProjectEnCode = map[Project]string{
-	JuBaoHaoHao: "jhh",
-	OtherCola:   "o_cola",
-
-	Cube222:    "222",
-	Cube333:    "333",
-	Cube444:    "444",
-	Cube555:    "555",
-	Cube666:    "666",
-	Cube777:    "777",
-	CubeSk:     "skewb",
-	CubePy:     "pyram",
-	CubeSq1:    "sq1",
-	CubeMinx:   "minx",
-	CubeClock:  "clock",
-	Cube333OH:  "333oh",
-	Cube333FM:  "333fm",
-	Cube333BF:  "333bf",
-	Cube444BF:  "444bf",
-	Cube555BF:  "555bf",
-	Cube333MBF: "333mbf",
-}
 
 var cubeProjectCnCode = map[Project]string{
 	JuBaoHaoHao: "菊爆浩浩",

@@ -17,8 +17,6 @@ import (
 	json "github.com/json-iterator/go"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-
-	"github.com/guojia99/my-cubing/src/core/model"
 )
 
 // v1 表
@@ -50,23 +48,23 @@ type (
 
 	// Score 成绩表
 	Score struct {
-		ID           uint          `gorm:"primaryKey;column:id"`
-		CreatedAt    time.Time     `gorm:"autoCreateTime;column:created_at"`
-		PlayerID     uint          `json:"PlayerID" gorm:"index;not null;column:player_id"`   // 选手的ID
-		ContestID    uint          `json:"ContestID" gorm:"index;not null;column:contest_id"` // 比赛的ID
-		RouteNumber  uint          `json:"RouteNumber" gorm:"not null;column:route_number"`   // 该项目的轮次
-		Project      model.Project `json:"Project" gorm:"not null;column:project"`            // 分项目 333/222/444等
-		Result1      float64       `json:"R1" gorm:"column:r1;NULL"`                          // 成绩1 多盲时这个成绩是实际还原数
-		Result2      float64       `json:"R2" gorm:"column:r2;NULL"`                          // 成绩2 多盲时这个成绩是尝试复原数
-		Result3      float64       `json:"R3" gorm:"column:r3;NULL"`                          // 成绩3 多盲时这个成绩是计时
-		Result4      float64       `json:"R4" gorm:"column:r4;NULL"`                          // 成绩4
-		Result5      float64       `json:"R5" gorm:"column:r5;NULL"`                          // 成绩5
-		Best         float64       `json:"Best" gorm:"column:best;NULL"`                      // 五把最好成绩
-		Avg          float64       `json:"Avg" gorm:"column:avg;NULL"`                        // 五把平均成绩
-		IsBest       bool          `json:"IsBest" grom:"column:is_best;NULL"`                 // 这是比往期最佳的还好的成绩
-		IsBestAvg    bool          `json:"IsBestAvg" grom:"column:is_best_avg;NULL"`          // 这是比往期最佳的成绩还好的平均成绩
-		IsBestRecord bool          `json:"BestRecord" gorm:"column:is_best_record;NULL"`      // 打破了以往的最佳记录
-		IsAvgRecord  bool          `json:"AvgRecord" gorm:"column:is_avg_record;NULL"`        // 打破了以往的平均记录
+		ID           uint      `gorm:"primaryKey;column:id"`
+		CreatedAt    time.Time `gorm:"autoCreateTime;column:created_at"`
+		PlayerID     uint      `json:"PlayerID" gorm:"index;not null;column:player_id"`   // 选手的ID
+		ContestID    uint      `json:"ContestID" gorm:"index;not null;column:contest_id"` // 比赛的ID
+		RouteNumber  uint      `json:"RouteNumber" gorm:"not null;column:route_number"`   // 该项目的轮次
+		Project      int       `json:"Project" gorm:"not null;column:project"`            // 分项目 333/222/444等
+		Result1      float64   `json:"R1" gorm:"column:r1;NULL"`                          // 成绩1 多盲时这个成绩是实际还原数
+		Result2      float64   `json:"R2" gorm:"column:r2;NULL"`                          // 成绩2 多盲时这个成绩是尝试复原数
+		Result3      float64   `json:"R3" gorm:"column:r3;NULL"`                          // 成绩3 多盲时这个成绩是计时
+		Result4      float64   `json:"R4" gorm:"column:r4;NULL"`                          // 成绩4
+		Result5      float64   `json:"R5" gorm:"column:r5;NULL"`                          // 成绩5
+		Best         float64   `json:"Best" gorm:"column:best;NULL"`                      // 五把最好成绩
+		Avg          float64   `json:"Avg" gorm:"column:avg;NULL"`                        // 五把平均成绩
+		IsBest       bool      `json:"IsBest" grom:"column:is_best;NULL"`                 // 这是比往期最佳的还好的成绩
+		IsBestAvg    bool      `json:"IsBestAvg" grom:"column:is_best_avg;NULL"`          // 这是比往期最佳的成绩还好的平均成绩
+		IsBestRecord bool      `json:"BestRecord" gorm:"column:is_best_record;NULL"`      // 打破了以往的最佳记录
+		IsAvgRecord  bool      `json:"AvgRecord" gorm:"column:is_avg_record;NULL"`        // 打破了以往的平均记录
 	}
 )
 
@@ -126,7 +124,6 @@ func AddPlayer(token string, name string, wcaID string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(body))
 	if res.StatusCode > 400 {
 		return fmt.Errorf("error")
 	}
@@ -205,7 +202,7 @@ func EndContest(token string, ContestID uint) error {
 	return nil
 }
 
-func AddScore(token string, name string, contestId, project, num int, result []float64) error {
+func AddScore(token string, name string, contestId int, project string, num int, result []float64) error {
 	url := uri + "/v2/api/score"
 	method := "POST"
 
@@ -295,7 +292,7 @@ func main() {
 		var scores []Score
 		_ = db.Where("contest_id = ?", contest.ID).Find(&scores)
 		for _, score := range scores {
-			err = AddScore(token, playerNames[score.PlayerID], int(contest.ID), int(score.Project), 1, []float64{
+			err = AddScore(token, playerNames[score.PlayerID], int(contest.ID), projectMap[score.Project], 1, []float64{
 				score.Result1, score.Result2, score.Result3, score.Result4, score.Result5,
 			})
 			if err != nil {
@@ -309,4 +306,26 @@ func main() {
 			return
 		}
 	}
+}
+
+var projectMap = map[int]string{
+	1:  "222",
+	2:  "333",
+	3:  "444",
+	4:  "555",
+	5:  "666",
+	6:  "777",
+	7:  "skewb",
+	8:  "pyram",
+	9:  "sq1",
+	10: "minx",
+	11: "clock",
+	12: "333oh",
+	13: "333fm",
+	14: "333bf",
+	15: "444bf",
+	16: "555bf",
+	17: "333mbf",
+	18: "jhh",
+	19: "o_cola",
 }

@@ -24,3 +24,5 @@ go.work
 
 database.db
 vendor
+
+mycube

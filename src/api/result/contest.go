@@ -52,13 +52,20 @@ type (
 	}
 )
 
+const (
+	OnLine          = "online"
+	offline         = "offline"
+	OfficialOffline = "official"
+)
+
 func GetContests(svc *svc.Context) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		// Try to get the cache.
 		page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
-		size, _ := strconv.Atoi(ctx.DefaultQuery("size", "50"))
-		if size > 50 {
-			size = 50
+		size, _ := strconv.Atoi(ctx.DefaultQuery("size", "20"))
+		typ, _ := strconv.Atoi(ctx.DefaultQuery("type", OnLine))
+		if size > 100 {
+			size = 100
 		}
 
 		offset := (page - 1) * size
@@ -72,13 +79,13 @@ func GetContests(svc *svc.Context) gin.HandlerFunc {
 
 		// Find Contests.
 		var contests []model.Contest
-		if err := svc.DB.Order("created_at DESC").Offset(offset).Limit(limit).Find(&contests).Error; err != nil {
+		if err := svc.DB.Where("c_type = ?", typ).Order("created_at DESC").Order("id DESC").Offset(offset).Limit(limit).Find(&contests).Error; err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
 		var count int64
-		if err := svc.DB.Model(&model.Contest{}).Count(&count).Error; err != nil {
+		if err := svc.DB.Model(&model.Contest{}).Where("c_type = ?", typ).Count(&count).Error; err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -99,6 +106,7 @@ func GetContests(svc *svc.Context) gin.HandlerFunc {
 				Rounds:  round,
 			})
 		}
+		resp.Size = int64(len(contests))
 		_ = svc.Cache.Add(key, resp, time.Second*30)
 		ctx.JSON(http.StatusOK, resp)
 	}
@@ -117,6 +125,7 @@ type (
 		Name        string                      `json:"Name"`
 		Description string                      `json:"Description"`
 		Rounds      []CreateContestRequestRound `json:"Rounds"`
+		Type        string                      `json:"Type"`
 		StartTime   int64                       `json:"StartTime"`
 		EndTime     int64                       `json:"EndTime"`
 	}
@@ -162,6 +171,7 @@ func CreateContest(svc *svc.Context) gin.HandlerFunc {
 		contest = model.Contest{
 			Name:        req.Name,
 			Description: req.Description,
+			Type:        req.Type,
 			StartTime:   time.Unix(req.StartTime, 0),
 			EndTime:     time.Unix(req.EndTime, 0),
 		}

@@ -17,6 +17,7 @@ type Contest struct {
 	Model
 
 	Name        string    `json:"Name" gorm:"unique;not null;column:name"`        // 比赛名
+	Type        string    `json:"type" gorm:"column:c_type"`                      // 类型 正式 | 线上 | 线下
 	Description string    `json:"Description" gorm:"not null;column:description"` // 描述
 	IsEnd       bool      `json:"IsEnd" gorm:"null;column:is_end"`                // 是否已结束
 	RoundIds    string    `json:"RoundIds" gorm:"column:round_ids"`               // 轮次ID

@@ -23,7 +23,6 @@ func (c *Client) initRoute() {
 		api.GET("/contest", result.GetContests(c.svc))
 		api.GET("/contest/:contest_id", result.GetContest(c.svc))
 		api.GET("/player", result.GetPlayers(c.svc))
-		api.GET("/project_map", result.GetProjectMap(c.svc)) // 项目映射表
 	}
 
 	{
@@ -56,6 +55,7 @@ func (c *Client) initRoute() {
 			rp.GET("/contest/:contest_id/sor", report.ContestSorReport(c.svc))       // 某比赛的sor
 			rp.GET("/contest/:contest_id/score", report.ContestScoreReport(c.svc))   // 某比赛的成绩统计
 			rp.GET("/contest/:contest_id/podium", report.ContestPodiumReport(c.svc)) // 某场比赛领奖台
+			rp.GET("/contest/:contest_id/record", report.ContestRecord(c.svc))
 
 			// 具体到个人
 			rp.GET("/player/:player_name/podium", report.PlayerPodiumReport(c.svc)) // 某个玩家的领奖台

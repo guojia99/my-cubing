@@ -58,8 +58,7 @@ func BestAllScoreReport(svc *svc.Context) gin.HandlerFunc {
 			return
 		}
 
-		p := model.StrToProject(project)
-		bestSingle, bestAvg := svc.Core.GetAllPlayerBestScoreByProject(p)
+		bestSingle, bestAvg := svc.Core.GetAllPlayerBestScoreByProject(model.Project(project))
 		ctx.JSON(http.StatusOK, BestAllScoreReportByProjectResponse{
 			BestSingle: bestSingle,
 			BestAvg:    bestAvg,

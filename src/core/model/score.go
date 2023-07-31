@@ -23,7 +23,7 @@ type Score struct {
 	PlayerID     uint    `json:"PlayerID" gorm:"index;not null;column:player_id"`   // 选手的ID
 	PlayerName   string  `json:"PlayerName" gorm:"column:player_name"`              // 玩家名
 	ContestID    uint    `json:"ContestID" gorm:"index;not null;column:contest_id"` // 比赛的ID
-	RouteID      uint    `json:"RouteID" gorm:"column:route_id"`                    // 轮次
+	RouteID      uint    `json:"RouteID" gorm:"index;column:route_id"`              // 轮次
 	Project      Project `json:"Project" gorm:"not null;column:project"`            // 分项目 333/222/444等
 	Result1      float64 `json:"R1" gorm:"column:r1;NULL"`                          // 成绩1 多盲时这个成绩是实际还原数
 	Result2      float64 `json:"R2" gorm:"column:r2;NULL"`                          // 成绩2 多盲时这个成绩是尝试复原数

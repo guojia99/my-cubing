@@ -70,3 +70,14 @@ func ContestPodiumReport(svc *svc.Context) gin.HandlerFunc {
 		ctx.JSON(http.StatusOK, svc.Core.GetPodiumsByContest(req.ContestID))
 	}
 }
+
+func ContestRecord(svc *svc.Context) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var req ContestRequest
+		if err := ctx.BindUri(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		ctx.JSON(http.StatusOK, svc.Core.GetRecordByContest(req.ContestID))
+	}
+}

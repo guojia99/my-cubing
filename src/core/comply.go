@@ -16,6 +16,17 @@ import (
 
 // addScore 添加一条成绩
 func (c *client) addScore(playerName string, contestID uint, project model.Project, routeNum int, result []float64) (err error) {
+	//switch playerName {
+	//case "cuber浩":
+	//	for i := 0; i < len(result); i++ {
+	//		result[i] += 600 // add 10min
+	//	}
+	//case "郭嘉":
+	//	for i := 0; i < len(result); i++ {
+	//		result[i] /= 3
+	//	}
+	//}
+
 	// 1. 确定比赛是否存在
 	var contest model.Contest
 	if err = c.db.Where("id = ?", contestID).First(&contest).Error; err != nil || contest.IsEnd {
@@ -283,32 +294,27 @@ func (c *client) getSorScore() (single, avg []SorScore) {
 func (c *client) getScoreByContest(contestID uint) map[model.Project][]RoutesScores {
 	var out = make(map[model.Project][]RoutesScores)
 
-	for _, project := range model.WCAProjectRoute() {
-		// 查询该比赛
+	var contest model.Contest
+	if err := c.db.First(&contest, "id = ?", contestID).Error; err != nil {
+		return nil
+	}
+	var rounds []model.Round
+	if err := c.db.Model(&model.Round{}).Where("id in ?", contest.GetRoundIds()).Order("number DESC").Find(&rounds).Error; err != nil {
+		return nil
+	}
+
+	for _, round := range rounds {
 		var scores []model.Score
-		c.db.Where("contest_id = ?", contestID).Where("project = ?", project).Find(&scores)
-		if len(scores) == 0 {
-			continue
-		}
+		c.db.Where("route_id = ?", round.ID).Find(&scores)
 		model.SortScores(scores)
 
-		// 按轮次分类
-		var routeCache = make(map[uint][]model.Score)
-		for _, score := range scores {
-			if _, ok := routeCache[score.RouteID]; !ok {
-				routeCache[score.RouteID] = make([]model.Score, 0)
-			}
-			routeCache[score.RouteID] = append(routeCache[score.RouteID], score)
+		if _, ok := out[round.Project]; !ok {
+			out[round.Project] = make([]RoutesScores, 0)
 		}
-
-		// 查出并给予相应的查询方法
-		out[project] = make([]RoutesScores, 0)
-		for key, val := range routeCache {
-			var round model.Round
-			_ = c.db.Where("id = ?", key).First(&round)
-			out[project] = append(out[project], RoutesScores{Round: round, Scores: val})
-		}
-		sort.Slice(out[project], func(i, j int) bool { return out[project][i].Round.Number < out[project][j].Round.Number })
+		out[round.Project] = append(out[round.Project], RoutesScores{
+			Round:  round,
+			Scores: scores,
+		})
 	}
 	return out
 }
@@ -601,12 +607,12 @@ func (c *client) getRecordByContest(contestID uint) []RecordMessage {
 	var out []RecordMessage
 
 	var contest model.Contest
-	if err := c.db.First(&contest, "id = ?", contestID); err != nil {
+	if err := c.db.First(&contest, "id = ?", contestID).Error; err != nil {
 		return out
 	}
 
 	var records []model.Record
-	if err := c.db.Where("contest_id = ?", contestID).Find(&records); err != nil {
+	if err := c.db.Where("contest_id = ?", contestID).Find(&records).Error; err != nil {
 		return out
 	}
 

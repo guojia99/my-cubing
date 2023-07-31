@@ -164,6 +164,9 @@ func (c *client) GetScoreByContest(contestID uint) map[model.Project][]RoutesSco
 	}
 
 	out := c.getScoreByContest(contestID)
+	if out == nil {
+		return out
+	}
 	_ = c.cache.Add(key, out, time.Minute*15)
 	return out
 }
@@ -213,8 +216,13 @@ func (c *client) GetAllPodium() []Podiums {
 }
 
 func (c *client) GetRecordByContest(contestID uint) []RecordMessage {
-	//TODO implement me
-	panic("implement me")
+	key := fmt.Sprintf("GetRecordByContest_%d", contestID)
+	if val, ok := c.cache.Get(key); ok && !c.debug {
+		return val.([]RecordMessage)
+	}
+	out := c.getRecordByContest(contestID)
+	_ = c.cache.Add(key, out, time.Minute*5)
+	return out
 }
 
 func (c *client) GetRecordByPlayer(playerID uint) []RecordMessage {
