@@ -474,6 +474,14 @@ func GetContestScores(ctx *gin.Context) {
 				if ss[i].Avg+ss[j].Avg == 0 { // 都没有平均成绩
 					return ss[i].IsBestScore(ss[j].Score)
 				}
+
+				if ss[i].Avg == 0 && ss[j].Avg != 0 {
+					return false
+				}
+				if ss[i].Avg != 0 && ss[j].Avg == 0 {
+					return true
+				}
+
 				return ss[i].IsBestAvgScore(ss[j].Score)
 			}
 		})
