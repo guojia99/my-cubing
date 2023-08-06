@@ -13,6 +13,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 
 	"github.com/guojia99/my-cubing/src/core"
 	"github.com/guojia99/my-cubing/src/core/model"
@@ -38,7 +39,9 @@ func NewContext(config string) (*Context, error) {
 	case "sqlite":
 		ctx.DB, err = gorm.Open(sqlite.Open(ctx.Cfg.DB.DSN), &gorm.Config{})
 	case "mysql":
-		ctx.DB, err = gorm.Open(mysql.New(mysql.Config{DSN: ctx.Cfg.DB.DSN}), &gorm.Config{})
+		ctx.DB, err = gorm.Open(mysql.New(mysql.Config{DSN: ctx.Cfg.DB.DSN}), &gorm.Config{
+			Logger: logger.Discard,
+		})
 	}
 	if err != nil {
 		return nil, err

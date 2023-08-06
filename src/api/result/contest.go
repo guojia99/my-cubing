@@ -18,9 +18,16 @@ import (
 	"github.com/guojia99/my-cubing/src/svc"
 )
 
-type ContestRequest struct {
-	ContestID uint `uri:"contest_id"`
-}
+type (
+	ContestRequest struct {
+		ContestID uint `uri:"contest_id"`
+	}
+
+	GetContestResponse struct {
+		Contest model.Contest `json:"Contest"`
+		Rounds  []model.Round `json:"Rounds"`
+	}
+)
 
 func GetContest(svc *svc.Context) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -35,7 +42,23 @@ func GetContest(svc *svc.Context) gin.HandlerFunc {
 			ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
-		ctx.JSON(http.StatusOK, contest)
+
+		var rounds []model.Round
+		if err := svc.DB.Find(&rounds, "contest_id = ?", req.ContestID).Error; err != nil {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+
+		for i := 0; i < len(rounds); i++ {
+			rounds[i].GetUpsets()
+			if !rounds[i].IsStart {
+				rounds[i].UpsetsVal = []string{}
+			}
+		}
+		ctx.JSON(http.StatusOK, GetContestResponse{
+			Contest: contest,
+			Rounds:  rounds,
+		})
 	}
 }
 
@@ -116,7 +139,9 @@ type (
 	CreateContestRequestRound struct {
 		Project model.Project `json:"Project"`
 		Number  int           `json:"Number"`
+		Part    int           `json:"Part"`
 		Name    string        `json:"Name"`
+		IsStart bool          `json:"IsStart"`
 		Final   bool          `json:"Final"`
 		Upsets  []string      `json:"Upsets"`
 	}
@@ -172,8 +197,18 @@ func CreateContest(svc *svc.Context) gin.HandlerFunc {
 			Name:        req.Name,
 			Description: req.Description,
 			Type:        req.Type,
-			StartTime:   time.Unix(req.StartTime, 0),
-			EndTime:     time.Unix(req.EndTime, 0),
+			StartTime: func() time.Time {
+				if req.StartTime == 0 {
+					return time.Now()
+				}
+				return time.Unix(req.StartTime, 0)
+			}(),
+			EndTime: func() time.Time {
+				if req.EndTime == 0 {
+					return time.Now().Add(time.Hour * 24 * 60) // 60 day
+				}
+				return time.Unix(req.EndTime, 0)
+			}(),
 		}
 
 		if err := svc.DB.Save(&contest).Error; err != nil {
@@ -191,6 +226,8 @@ func CreateContest(svc *svc.Context) gin.HandlerFunc {
 				ContestID: contest.ID,
 				Project:   val.Project,
 				Number:    val.Number,
+				Part:      val.Part,
+				IsStart:   val.IsStart,
 				Name:      val.Name,
 				Final:     val.Final,
 			}
@@ -199,10 +236,8 @@ func CreateContest(svc *svc.Context) gin.HandlerFunc {
 			roundIds = append(roundIds, round.ID)
 		}
 
-		fmt.Println(roundIds)
 		contest.SetRoundIds(roundIds)
 		svc.DB.Save(&contest)
-
 		ctx.JSON(http.StatusOK, gin.H{})
 	}
 }

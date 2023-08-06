@@ -13,7 +13,7 @@ import (
 )
 
 type RoutesScores struct {
-	Round  model.Round   `json:"Round"`
+	Round  []model.Round `json:"Round"`
 	Scores []model.Score `json:"Scores"`
 }
 

@@ -38,6 +38,9 @@ func (c *client) addScore(playerName string, contestID uint, project model.Proje
 	if err = c.db.Where("contest_id = ?", contestID).Where("project = ?", project).Where("number = ?", routeNum).First(&round).Error; err != nil {
 		return err
 	}
+	if !round.IsStart {
+		return fmt.Errorf("this round not start")
+	}
 
 	// 3. 玩家信息
 	var player = model.Player{Name: playerName}
@@ -303,19 +306,41 @@ func (c *client) getScoreByContest(contestID uint) map[model.Project][]RoutesSco
 		return nil
 	}
 
-	for _, round := range rounds {
+	// 按number分类
+	var roundCache = make(map[string][]model.Round)
+	for _, val := range rounds {
+		key := fmt.Sprintf("%s_%d", val.Project, val.Number)
+		if data, ok := roundCache[key]; ok {
+			data = append(data, val)
+			roundCache[key] = data
+			continue
+		}
+		roundCache[key] = []model.Round{val}
+	}
+
+	// 查询所有成绩
+	for _, rs := range roundCache {
+		if len(rs) == 0 {
+			continue
+		}
+		var pj = rs[0].Project
 		var scores []model.Score
-		c.db.Where("route_id = ?", round.ID).Find(&scores)
+		var ids []uint
+		for _, v := range rs {
+			ids = append(ids, v.ID)
+		}
+		c.db.Where("route_id in ?", ids).Find(&scores)
 		model.SortScores(scores)
 
-		if _, ok := out[round.Project]; !ok {
-			out[round.Project] = make([]RoutesScores, 0)
+		if _, ok := out[pj]; !ok {
+			out[pj] = make([]RoutesScores, 0)
 		}
-		out[round.Project] = append(out[round.Project], RoutesScores{
-			Round:  round,
+		out[pj] = append(out[pj], RoutesScores{
+			Round:  rs,
 			Scores: scores,
 		})
 	}
+
 	return out
 }
 

@@ -16,8 +16,26 @@ import (
 	"github.com/guojia99/my-cubing/src/svc"
 )
 
+func PlayerBest(svc *svc.Context) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var req PlayerNameRequest
+		if err := ctx.BindUri(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		var player model.Player
+		if err := svc.DB.Where("id = ?", req.PlayerId).First(&player).Error; err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		svc.Core.GetAllPlayerBestScore()
+	}
+}
+
 type PlayerNameRequest struct {
-	PlayerName string `uri:"player_name"`
+	PlayerId uint `uri:"player_id"`
 }
 
 func PlayerPodiumReport(svc *svc.Context) gin.HandlerFunc {
@@ -29,7 +47,7 @@ func PlayerPodiumReport(svc *svc.Context) gin.HandlerFunc {
 		}
 
 		var player model.Player
-		if err := svc.DB.Where("name = ?", req.PlayerName).First(&player).Error; err != nil {
+		if err := svc.DB.Where("id = ?", req.PlayerId).First(&player).Error; err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -52,7 +70,7 @@ func PlayerScoreReport(svc *svc.Context) gin.HandlerFunc {
 		}
 
 		var player model.Player
-		if err := svc.DB.Where("name = ?", req.PlayerName).First(&player).Error; err != nil {
+		if err := svc.DB.Where("id = ?", req.PlayerId).First(&player).Error; err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}

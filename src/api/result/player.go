@@ -15,6 +15,28 @@ import (
 	"github.com/guojia99/my-cubing/src/svc"
 )
 
+type PlayerRequest struct {
+	Id string `uri:"player_id"`
+}
+
+func GetPlayer(svc *svc.Context) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var req PlayerRequest
+		if err := ctx.BindUri(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		var Player model.Player
+		if err := svc.DB.First(&Player, "id = ?", req.Id).Error; err != nil {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+		Player.GetTitles()
+		ctx.JSON(http.StatusOK, Player)
+	}
+}
+
 type PlayersResponse struct {
 	Players []model.Player `json:"Players"`
 }
@@ -25,6 +47,9 @@ func GetPlayers(svc *svc.Context) gin.HandlerFunc {
 		if err := svc.DB.Find(&resp.Players).Error; err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
+		}
+		for i := 0; i < len(resp.Players); i++ {
+			resp.Players[i].GetTitles()
 		}
 		ctx.JSON(http.StatusOK, resp)
 	}

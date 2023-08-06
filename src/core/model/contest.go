@@ -43,12 +43,14 @@ func (c *Contest) SetRoundIds(in []uint) *Contest {
 // Round 轮次及打乱
 type Round struct {
 	Model
+	Name      string   `json:"Name" grom:"column:name"`
 	ContestID uint     `json:"ContestID" gorm:"column:contest_id"` // 所属比赛
 	Project   Project  `json:"Project" gorm:"column:project"`      // 项目
-	Number    int      `json:"Number" gorm:"column:number"`        // 轮次
-	Name      string   `json:"Name" grom:"column:name"`            // 名
+	Number    int      `json:"Number" gorm:"column:number"`        // 项目轮次
+	Part      int      `json:"Part" gorm:"column:part"`            // 该轮次第几份打乱
 	Final     bool     `json:"Final" gorm:"column:final"`          // 是否是最后一轮
-	Upsets    string   `json:"Upsets" gorm:"column:upsets"`        // 打乱 UpsetDetail
+	IsStart   bool     `json:"IsStart" gorm:"column:is_start"`     // 是否已开始
+	Upsets    string   `json:"-" gorm:"column:upsets"`             // 打乱 UpsetDetail
 	UpsetsVal []string `json:"UpsetsVal" gorm:"-"`                 // 打乱 UpsetDetail 实际内容
 }
 
