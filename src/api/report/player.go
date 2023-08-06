@@ -16,6 +16,11 @@ import (
 	"github.com/guojia99/my-cubing/src/svc"
 )
 
+type PlayerBestResponse struct {
+	Best map[model.Project]core.RankScore `json:"Best"`
+	Avg  map[model.Project]core.RankScore `json:"Avg"`
+}
+
 func PlayerBest(svc *svc.Context) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var req PlayerNameRequest
@@ -30,7 +35,11 @@ func PlayerBest(svc *svc.Context) gin.HandlerFunc {
 			return
 		}
 
-		svc.Core.GetAllPlayerBestScore()
+		best, avg := svc.Core.GetPlayerBestScore(player.ID)
+		ctx.JSON(http.StatusOK, PlayerBestResponse{
+			Best: best,
+			Avg:  avg,
+		})
 	}
 }
 

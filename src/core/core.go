@@ -33,6 +33,8 @@ type (
 	Read interface {
 		// GetBestScores 获取所有项目最佳成绩
 		GetBestScores() (bestSingle, bestAvg map[model.Project]model.Score)
+		// GetPlayerBestScore 获取玩家最佳成绩及排名
+		GetPlayerBestScore(playerId uint) (bestSingle, bestAvg map[model.Project]RankScore)
 		// GetAllPlayerBestScore 获取所有人最佳成绩
 		GetAllPlayerBestScore() (bestSingle, bestAvg map[model.Project][]model.Score)
 		// GetAllPlayerBestScoreByProject 获取某个项目最佳成绩
@@ -112,6 +114,41 @@ func (c *client) GetBestScores() (bestSingle, bestAvg map[model.Project]model.Sc
 	bestSingle, bestAvg = c.getBestScores()
 	_ = c.cache.Add(key, [2]map[model.Project]model.Score{bestSingle, bestAvg}, time.Minute*15)
 	return
+}
+
+func (c *client) GetPlayerBestScore(playerId uint) (bestSingle, bestAvg map[model.Project]RankScore) {
+	key := fmt.Sprintf("GetPlayerBestScore_%d", playerId)
+	if val, ok := c.cache.Get(key); ok && !c.debug {
+		result := val.([2]map[model.Project]RankScore)
+		return result[0], result[1]
+	}
+
+	bestSingle, bestAvg = make(map[model.Project]RankScore), make(map[model.Project]RankScore)
+	allBest, allAvg := c.GetAllPlayerBestScore()
+	for _, val := range allBest {
+		for i := 0; i < len(val); i++ {
+			if val[i].PlayerID == playerId {
+				bestSingle[val[i].Project] = RankScore{
+					Rank:  i + 1,
+					Score: val[i],
+				}
+				break
+			}
+		}
+	}
+	for _, val := range allAvg {
+		for i := 0; i < len(val); i++ {
+			if val[i].PlayerID == playerId {
+				bestAvg[val[i].Project] = RankScore{
+					Rank:  i + 1,
+					Score: val[i],
+				}
+				break
+			}
+		}
+	}
+	_ = c.cache.Add(key, [2]map[model.Project]RankScore{bestSingle, bestAvg}, time.Minute*15)
+	return bestSingle, bestAvg
 }
 
 func (c *client) GetAllPlayerBestScore() (bestSingle, bestAvg map[model.Project][]model.Score) {

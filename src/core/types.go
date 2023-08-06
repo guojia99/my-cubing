@@ -12,6 +12,11 @@ import (
 	"github.com/guojia99/my-cubing/src/core/model"
 )
 
+type RankScore struct {
+	Rank  int         `json:"Rank"` // 排名
+	Score model.Score `json:"Score"`
+}
+
 type RoutesScores struct {
 	Round  []model.Round `json:"Round"`
 	Scores []model.Score `json:"Scores"`
