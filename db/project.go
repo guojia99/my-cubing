@@ -43,6 +43,7 @@ func ProjectList() []Project {
 		Cube333MBF,
 		JuBaoHaoHao,
 		OtherCola,
+		Cube333Ft,
 	}
 }
 
@@ -79,6 +80,7 @@ func WCAProjectRoute() []Project {
 		Cube444BF,
 		Cube555BF,
 		Cube333MBF,
+		Cube333Ft,
 	}
 }
 
@@ -102,6 +104,7 @@ const (
 	Cube333MBF
 	JuBaoHaoHao
 	OtherCola
+	Cube333Ft
 )
 
 var cubeProjectEnCode = map[Project]string{
@@ -125,6 +128,7 @@ var cubeProjectEnCode = map[Project]string{
 	Cube444BF:  "444bf",
 	Cube555BF:  "555bf",
 	Cube333MBF: "333mbf",
+	Cube333Ft:  "333ft",
 }
 
 var cubeProjectCnCode = map[Project]string{
@@ -148,4 +152,5 @@ var cubeProjectCnCode = map[Project]string{
 	Cube444BF:  "四盲",
 	Cube555BF:  "五盲",
 	Cube333MBF: "多盲",
+	Cube333Ft:  "脚拧",
 }

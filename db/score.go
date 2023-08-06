@@ -47,7 +47,7 @@ func (s *Score) SetResult(in []float64) error {
 		s.Best = in[0]
 		s.Avg = in[0]
 		// 五次的项目
-	case Cube222, Cube333, Cube444, Cube555, CubeSk, CubePy, CubeSq1, CubeMinx, CubeClock, Cube333OH:
+	case Cube222, Cube333, Cube444, Cube555, CubeSk, CubePy, CubeSq1, CubeMinx, CubeClock, Cube333OH, Cube333Ft:
 		if len(in) != 5 {
 			return fmt.Errorf("该项目需要输入5个成绩")
 		}
