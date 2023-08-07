@@ -356,27 +356,28 @@ func GetSorScores(ctx *gin.Context) {
 	for _, project := range db.WCAProjectRoute() {
 		for _, player := range players {
 			var bestAdd bool
-			var avgAdd bool
-
 			for idx, val := range bestCache[project] {
 				if val.Player == player.Name {
 					playerCache[val.Player][0].Count += idx + 1
 					bestAdd = true
 				}
 			}
+			if !bestAdd {
+				playerCache[player.Name][0].Count += len(bestCache[project]) + 1
+			}
 
+			if project == db.Cube333MBF {
+				continue
+			}
+			var avgAdd bool
 			for idx, val := range avgCache[project] {
 				if val.Player == player.Name {
 					playerCache[val.Player][1].Count += idx + 1
 					avgAdd = true
 				}
 			}
-
-			if !bestAdd {
-				playerCache[player.Name][0].Count += len(players)
-			}
 			if !avgAdd {
-				playerCache[player.Name][1].Count += len(players)
+				playerCache[player.Name][1].Count += len(avgCache[project]) + 1
 			}
 		}
 	}
