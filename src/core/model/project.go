@@ -25,6 +25,7 @@ func WCAProjectRoute() []Project {
 		Cube444BF,
 		Cube555BF,
 		Cube333MBF,
+		Cube333Ft,
 	}
 }
 
@@ -52,6 +53,7 @@ const (
 	Cube444BF   Project = "444bf"
 	Cube555BF   Project = "555bf"
 	Cube333MBF  Project = "333mbf"
+	Cube333Ft   Project = "333ft"
 )
 
 var cubeProjectCnCode = map[Project]string{
@@ -75,4 +77,5 @@ var cubeProjectCnCode = map[Project]string{
 	Cube444BF:  "四盲",
 	Cube555BF:  "五盲",
 	Cube333MBF: "多盲",
+	Cube333Ft:  "脚拧",
 }

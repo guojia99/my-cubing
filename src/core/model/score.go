@@ -46,7 +46,7 @@ func (s *Score) SetResult(in []float64) error {
 	switch s.Project {
 	case JuBaoHaoHao, OtherCola:
 		s.Result1, s.Best, s.Avg = in[0], in[0], in[0]
-	case Cube222, Cube333, Cube444, Cube555, CubeSk, CubePy, CubeSq1, CubeMinx, CubeClock, Cube333OH:
+	case Cube222, Cube333, Cube444, Cube555, CubeSk, CubePy, CubeSq1, CubeMinx, CubeClock, Cube333OH, Cube333Ft:
 		s.Result1, s.Result2, s.Result3, s.Result4, s.Result5 = in[0], in[1], in[2], in[3], in[4]
 		cache := in
 		sort.Slice(cache, func(i, j int) bool { return cache[i] < cache[j] })
