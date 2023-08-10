@@ -20,43 +20,53 @@ import (
 type (
 	Core interface {
 		Read
+		ReadPlayer
+		ReadContest
 		// ReloadCache 重置缓存
 		ReloadCache()
 		// AddScore 添加成绩
-		AddScore(playerName string, contestID uint, project model.Project, routeNum int, result []float64) error
+		AddScore(playerName string, contestID uint, project model.Project, routeNum int, result []float64, penalty model.ScorePenalty) error
 		// RemoveScore 删除成绩
 		RemoveScore(playerName string, contestID uint, project model.Project, routeNum int) error
 		// StatisticalRecordsAndEndContest 结束比赛并统计记录
 		StatisticalRecordsAndEndContest(contestId uint) error
 	}
 
-	Read interface {
-		// GetBestScores 获取所有项目最佳成绩
-		GetBestScores() (bestSingle, bestAvg map[model.Project]model.Score)
+	ReadPlayer interface {
+		// GetPlayerDetail 获取玩家参赛信息
+		GetPlayerDetail(playerId uint) PlayerDetail
 		// GetPlayerBestScore 获取玩家最佳成绩及排名
 		GetPlayerBestScore(playerId uint) (bestSingle, bestAvg map[model.Project]RankScore)
 		// GetAllPlayerBestScore 获取所有人最佳成绩
 		GetAllPlayerBestScore() (bestSingle, bestAvg map[model.Project][]model.Score)
 		// GetAllPlayerBestScoreByProject 获取某个项目最佳成绩
 		GetAllPlayerBestScoreByProject(project model.Project) (bestSingle, bestAvg []model.Score)
-		// GetSorScore 获取排名总和
-		GetSorScore() (single, avg []SorScore)
+		// GetPodiumsByPlayer 获取玩家领奖台数据
+		GetPodiumsByPlayer(playerID uint) Podiums
+		// GetRecordByPlayer 获取一个人的记录
+		GetRecordByPlayer(playerID uint) []RecordMessage
+		// GetPlayerScore 获取选手所有成绩
+		GetPlayerScore(playerID uint) (bestSingle, bestAvg []model.Score, scores []ScoresByContest)
+	}
+
+	ReadContest interface {
 		// GetSorScoreByContest 获取某场比赛的排名总和
 		GetSorScoreByContest(contestID uint) (single, avg []SorScore)
 		// GetScoreByContest 获取某场比赛成绩排名
 		GetScoreByContest(contestID uint) map[model.Project][]RoutesScores
-		// GetPlayerScore 获取选手所有成绩
-		GetPlayerScore(playerID uint) (bestSingle, bestAvg []model.Score, scores []ScoresByContest)
-		// GetPodiumsByPlayer 获取玩家领奖台数据
-		GetPodiumsByPlayer(playerID uint) Podiums
 		// GetPodiumsByContest 获取比赛的领奖台数据
 		GetPodiumsByContest(contestID uint) []Podiums
+	}
+
+	Read interface {
+		// GetBestScores 获取所有项目最佳成绩
+		GetBestScores() (bestSingle, bestAvg map[model.Project]model.Score)
+		// GetSorScore 获取排名总和
+		GetSorScore() (single, avg []SorScore)
 		// GetAllPodium 获取全部人的领奖台排行
 		GetAllPodium() []Podiums
 		// GetRecordByContest 获取一场比赛中的记录
 		GetRecordByContest(contestID uint) []RecordMessage
-		// GetRecordByPlayer 获取一个人的记录
-		GetRecordByPlayer(playerID uint) []RecordMessage
 	}
 )
 
@@ -80,8 +90,8 @@ func (c *client) ReloadCache() {
 	runtime.GC()
 }
 
-func (c *client) AddScore(playerName string, contestID uint, project model.Project, routeNum int, result []float64) error {
-	if err := c.addScore(playerName, contestID, project, routeNum, result); err != nil {
+func (c *client) AddScore(playerName string, contestID uint, project model.Project, routeNum int, result []float64, penalty model.ScorePenalty) error {
+	if err := c.addScore(playerName, contestID, project, routeNum, result, penalty); err != nil {
 		return err
 	}
 	c.ReloadCache()
@@ -149,6 +159,18 @@ func (c *client) GetPlayerBestScore(playerId uint) (bestSingle, bestAvg map[mode
 	}
 	_ = c.cache.Add(key, [2]map[model.Project]RankScore{bestSingle, bestAvg}, time.Minute*15)
 	return bestSingle, bestAvg
+}
+
+func (c *client) GetPlayerDetail(playerId uint) PlayerDetail {
+	key := fmt.Sprintf("GetPlayerDetail%d", playerId)
+
+	if val, ok := c.cache.Get(key); ok && !c.debug {
+		return val.(PlayerDetail)
+	}
+
+	out := c.getPlayerDetail(playerId)
+	_ = c.cache.Add(key, out, time.Minute*15)
+	return out
 }
 
 func (c *client) GetAllPlayerBestScore() (bestSingle, bestAvg map[model.Project][]model.Score) {
@@ -263,6 +285,11 @@ func (c *client) GetRecordByContest(contestID uint) []RecordMessage {
 }
 
 func (c *client) GetRecordByPlayer(playerID uint) []RecordMessage {
-	//TODO implement me
-	panic("implement me")
+	key := fmt.Sprintf("GetRecordByPlayer%d", playerID)
+	if val, ok := c.cache.Get(key); ok && !c.debug {
+		return val.([]RecordMessage)
+	}
+	out := c.getRecordByPlayer(playerID)
+	_ = c.cache.Add(key, out, time.Minute*5)
+	return out
 }

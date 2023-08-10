@@ -15,9 +15,14 @@ import (
 	"github.com/guojia99/my-cubing/src/svc"
 )
 
-type PlayerRequest struct {
-	Id string `uri:"player_id"`
-}
+type (
+	PlayerRequest struct {
+		Id uint `uri:"player_id"`
+	}
+	PlayerResponse struct {
+		model.Player
+	}
+)
 
 func GetPlayer(svc *svc.Context) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -27,13 +32,13 @@ func GetPlayer(svc *svc.Context) gin.HandlerFunc {
 			return
 		}
 
-		var Player model.Player
-		if err := svc.DB.First(&Player, "id = ?", req.Id).Error; err != nil {
-			ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		out := svc.Core.GetPlayerDetail(req.Id)
+		if out.ID == 0 {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 			return
 		}
-		Player.GetTitles()
-		ctx.JSON(http.StatusOK, Player)
+
+		ctx.JSON(http.StatusOK, out)
 	}
 }
 

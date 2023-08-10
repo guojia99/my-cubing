@@ -23,7 +23,7 @@ type PlayerBestResponse struct {
 
 func PlayerBest(svc *svc.Context) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var req PlayerNameRequest
+		var req PlayerRequest
 		if err := ctx.BindUri(&req); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -43,13 +43,13 @@ func PlayerBest(svc *svc.Context) gin.HandlerFunc {
 	}
 }
 
-type PlayerNameRequest struct {
+type PlayerRequest struct {
 	PlayerId uint `uri:"player_id"`
 }
 
 func PlayerPodiumReport(svc *svc.Context) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var req PlayerNameRequest
+		var req PlayerRequest
 		if err := ctx.BindUri(&req); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -72,7 +72,7 @@ type PlayerScoreReportResponse struct {
 
 func PlayerScoreReport(svc *svc.Context) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var req PlayerNameRequest
+		var req PlayerRequest
 		if err := ctx.BindUri(&req); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -89,5 +89,21 @@ func PlayerScoreReport(svc *svc.Context) gin.HandlerFunc {
 			BestAvg:    bestAvg,
 			Scores:     scores,
 		})
+	}
+}
+
+func PlayerRecord(svc *svc.Context) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var req PlayerRequest
+		if err := ctx.BindUri(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		var player model.Player
+		if err := svc.DB.Where("id = ?", req.PlayerId).First(&player).Error; err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		ctx.JSON(http.StatusOK, svc.Core.GetRecordByPlayer(req.PlayerId))
 	}
 }

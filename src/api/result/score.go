@@ -17,11 +17,12 @@ import (
 
 type (
 	CreateScoreRequest struct {
-		PlayerName string        `json:"PlayerName"`
-		ContestID  uint          `json:"ContestID"`
-		Project    model.Project `json:"Project"`
-		RouteNum   int           `json:"RouteNum"`
-		Results    []float64     `json:"Results"`
+		PlayerName string             `json:"PlayerName"`
+		ContestID  uint               `json:"ContestID"`
+		Project    model.Project      `json:"Project"`
+		RouteNum   int                `json:"RouteNum"`
+		Penalty    model.ScorePenalty `json:"Penalty"`
+		Results    []float64          `json:"Results"`
 	}
 )
 
@@ -32,7 +33,7 @@ func CreateScore(svc *svc.Context) gin.HandlerFunc {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		if err := svc.Core.AddScore(req.PlayerName, req.ContestID, req.Project, req.RouteNum, req.Results); err != nil {
+		if err := svc.Core.AddScore(req.PlayerName, req.ContestID, req.Project, req.RouteNum, req.Results, req.Penalty); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}

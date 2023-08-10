@@ -235,8 +235,8 @@ func AddScore(token string, name string, contestId int, project string, num int,
 	if err != nil {
 		return err
 	}
-	if res.StatusCode > 400 {
-		return fmt.Errorf("error")
+	if res.StatusCode >= 400 {
+		return fmt.Errorf("error %s", string(body))
 	}
 	return nil
 }
@@ -328,4 +328,5 @@ var projectMap = map[int]string{
 	17: "333mbf",
 	18: "jhh",
 	19: "o_cola",
+	20: "333ft",
 }

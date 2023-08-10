@@ -11,11 +11,13 @@ import (
 	"sort"
 	"time"
 
+	jsoniter "github.com/json-iterator/go"
+
 	"github.com/guojia99/my-cubing/src/core/model"
 )
 
 // addScore 添加一条成绩
-func (c *client) addScore(playerName string, contestID uint, project model.Project, routeNum int, result []float64) (err error) {
+func (c *client) addScore(playerName string, contestID uint, project model.Project, routeNum int, result []float64, penalty model.ScorePenalty) (err error) {
 	//switch playerName {
 	//case "cuber浩":
 	//	for i := 0; i < len(result); i++ {
@@ -64,10 +66,10 @@ func (c *client) addScore(playerName string, contestID uint, project model.Proje
 		}
 	}
 
-	if err = score.SetResult(result); err != nil {
+	if err = score.SetResult(result, penalty); err != nil {
 		return err
 	}
-
+	score.Penalty, _ = jsoniter.MarshalToString(penalty)
 	if err = c.db.Save(&score).Error; err != nil {
 		return err
 	}
@@ -167,11 +169,32 @@ func (c *client) statisticalRecordsAndEndContest(contestID uint) (err error) {
 			})
 		}
 	}
-	if err = c.db.Save(&records).Error; err != nil {
-		return err
+	_ = c.db.Save(&records)
+
+	// 3. 统计排名
+	var rounds []model.Round
+	c.db.Where("id in ?", contest.GetRoundIds()).Find(&rounds)
+	var roundCache = make(map[string][]model.Round)
+	for i := 0; i < len(rounds); i++ {
+		key := fmt.Sprintf("%s_%d", rounds[i].Project, rounds[i].Number)
+		if _, ok := roundCache[key]; !ok {
+			roundCache[key] = []model.Round{rounds[i]}
+			continue
+		}
+		roundCache[key] = append(roundCache[key], rounds[i])
+	}
+	for _, val := range roundCache {
+		var ids []uint
+		for _, v := range val {
+			ids = append(ids, v.ID)
+		}
+		var scores []model.Score
+		c.db.Where("route_id in ?", ids).Find(&scores)
+		model.SortScoresByWCA(scores)
+		c.db.Save(&scores)
 	}
 
-	// 3. 结束比赛
+	// 4. 结束比赛
 	contest.IsEnd = true
 	contest.EndTime = time.Now()
 	return c.db.Save(&contest).Error
@@ -218,7 +241,7 @@ func (c *client) getAllPlayerBestScore() (bestSingle, bestAvg map[model.Project]
 			var best, avg model.Score
 			if project == model.Cube333MBF {
 				if err := c.db.Where("player_id = ?", player.ID).Where("project = ?", project).Where("r1 != ?", 0).
-					Order("best").Order("r2 DESC").Order("r3").First(&best).Error; err == nil {
+					Order("best DESC").Order("r2").Order("r3").First(&best).Error; err == nil {
 					bestSingle[project] = append(bestSingle[project], best)
 				}
 				continue
@@ -238,8 +261,10 @@ func (c *client) getAllPlayerBestScore() (bestSingle, bestAvg map[model.Project]
 		}
 
 		// sort
-		sort.Slice(bestSingle[project], func(i, j int) bool { return bestSingle[project][i].IsBestScore(bestSingle[project][j]) })
-		sort.Slice(bestAvg[project], func(i, j int) bool { return bestAvg[project][i].IsBestScore(bestAvg[project][j]) })
+		//sort.Slice(bestSingle[project], func(i, j int) bool { return bestSingle[project][i].IsBestScore(bestSingle[project][j]) })
+		//sort.Slice(bestAvg[project], func(i, j int) bool { return bestAvg[project][i].IsBestAvgScore(bestAvg[project][j]) })
+		model.SortByBest(bestSingle[project])
+		model.SortByAvg(bestAvg[project])
 	}
 
 	return
@@ -330,7 +355,7 @@ func (c *client) getScoreByContest(contestID uint) map[model.Project][]RoutesSco
 			ids = append(ids, v.ID)
 		}
 		c.db.Where("route_id in ?", ids).Find(&scores)
-		model.SortScores(scores)
+		model.SortScoresByWCA(scores)
 
 		if _, ok := out[pj]; !ok {
 			out[pj] = make([]RoutesScores, 0)
@@ -404,7 +429,6 @@ func (c *client) getSorScoreByContest(contestID uint) (single, avg []SorScore) {
 					break
 				}
 			}
-
 			if !bestUse {
 				playerCache[player.ID].SingleCount += int64(len(players))
 			}
@@ -452,9 +476,15 @@ func (c *client) getPlayerScore(playerID uint) (bestSingle, bestAvg []model.Scor
 
 	for key, val := range cache {
 		var contest model.Contest
-		c.db.Where("id = ?", key).First(&contest)
+		if err := c.db.Where("id = ?", key).Where("is_end = ?", 1).First(&contest).Error; err != nil {
+			continue
+		}
+		var rounds []model.Round
+		c.db.Find(&rounds, "contest_id = ?", contest.ID)
+
 		scoresByContest = append(scoresByContest, ScoresByContest{
 			Contest: contest,
+			Rounds:  rounds,
 			Scores:  val,
 		})
 	}
@@ -465,6 +495,11 @@ func (c *client) getPlayerScore(playerID uint) (bestSingle, bestAvg []model.Scor
 	for _, val := range bestCache {
 		bestSingle = append(bestSingle, val)
 	}
+
+	// 给所有成绩排序
+	sort.Slice(bestSingle, func(i, j int) bool { return bestSingle[i].ID > bestSingle[j].ID })
+	sort.Slice(bestAvg, func(i, j int) bool { return bestAvg[i].ID > bestAvg[j].ID })
+	sort.Slice(scoresByContest, func(i, j int) bool { return scoresByContest[i].Contest.ID > scoresByContest[j].Contest.ID })
 	return
 }
 
@@ -522,7 +557,7 @@ func (c *client) getContestTop(contestID uint, n int) map[model.Project][]model.
 		case model.Cube333MBF, model.Cube333BF, model.Cube444BF, model.Cube555BF:
 			c.db.Where("contest_id = ?", contestID).Where("project = ?", project).Where("best != ?", 0).Order("best").Limit(n).Find(&score)
 		default:
-			c.db.Where("contest_id = ?", contestID).Where("project = ?", project).Where("avg != ?", 0).Order("avg").Limit(n).Find(&score)
+			c.db.Where("contest_id = ?", contestID).Where("project = ?", project).Where("avg != ?", 0).Order("avg").Order("best").Limit(n).Find(&score)
 		}
 		if len(score) > 0 {
 			out[project] = score
@@ -542,9 +577,18 @@ func (c *client) getContestBestSingle(contestID uint, past bool) map[model.Proje
 
 	for _, project := range model.WCAProjectRoute() {
 		var score model.Score
-		if err := c.db.Where(conn, contestID).Where("project = ?", project).Where("best != ?", 0).Order("best").First(&score).Error; err != nil {
+		var err error
+
+		switch project {
+		case model.Cube333MBF:
+			err = c.db.Where(conn, contestID).Where("project = ?", project).Where("best != ?", 0).Order("best DESC").Order("r2").Order("r3").Order("created_at").First(&score).Error
+		default:
+			err = c.db.Where(conn, contestID).Where("project = ?", project).Where("best != ?", 0).Order("best").Order("created_at").First(&score).Error
+		}
+		if err != nil {
 			continue
 		}
+
 		out[project] = score
 	}
 	return out
@@ -559,7 +603,7 @@ func (c *client) getContestBestAvg(contestID uint, past bool) map[model.Project]
 	}
 	for _, project := range model.WCAProjectRoute() {
 		var score model.Score
-		if err := c.db.Where(conn, contestID).Where("project = ?", project).Where("avg != ?", 0).Order("avg").First(&score).Error; err != nil {
+		if err := c.db.Where(conn, contestID).Where("project = ?", project).Where("avg != ?", 0).Order("avg").Order("created_at").First(&score).Error; err != nil {
 			continue
 		}
 		out[project] = score
@@ -653,6 +697,72 @@ func (c *client) getRecordByContest(contestID uint) []RecordMessage {
 			Score:   score,
 			Contest: contest,
 		})
+	}
+	return out
+}
+
+func (c *client) getRecordByPlayer(playerID uint) []RecordMessage {
+	var out []RecordMessage
+
+	var player model.Player
+	if err := c.db.Find(&player, "id = ?", playerID).Error; err != nil {
+		return out
+	}
+
+	var records []model.Record
+	if err := c.db.Where("player_id = ?", playerID).Find(&records).Error; err != nil {
+		return out
+	}
+
+	for _, record := range records {
+		var contest model.Contest
+		var score model.Score
+		_ = c.db.First(&contest, "id = ?", record.ContestID).Error
+		_ = c.db.First(&score, "id = ?", record.ScoreId).Error
+
+		out = append(out, RecordMessage{
+			Record:  record,
+			Player:  player,
+			Score:   score,
+			Contest: contest,
+		})
+	}
+	return out
+}
+
+func (c *client) getPlayerDetail(playerId uint) PlayerDetail {
+	var player model.Player
+	if err := c.db.First(&player, "id = ?", playerId).Error; err != nil {
+		return PlayerDetail{}
+	}
+
+	var contestIDs []uint64
+	c.db.Model(&model.Score{}).Distinct("contest_id").Where("player_id = ?", playerId).Pluck("contest_id", &contestIDs)
+
+	out := PlayerDetail{
+		Player:        player,
+		ContestNumber: len(contestIDs),
+	}
+
+	var score []model.Score
+	c.db.Model(&model.Score{}).Find(&score, "player_id = ?", playerId)
+	for _, s := range score {
+
+		if s.Project == model.Cube333MBF {
+			out.RecoveryNumber += 1
+			if s.Best == 0 {
+				out.ValidRecoveryNumber += 1
+			}
+			continue
+		}
+
+		rs := s.GetResult()
+		out.RecoveryNumber += len(rs)
+		for _, val := range rs {
+			if val <= 0 {
+				out.ValidRecoveryNumber += 1
+			}
+		}
 	}
 	return out
 }

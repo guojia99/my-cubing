@@ -25,6 +25,7 @@ type RoutesScores struct {
 type ScoresByContest struct {
 	Contest model.Contest `json:"Contest"`
 	Scores  []model.Score `json:"Scores"`
+	Rounds  []model.Round `json:"Rounds"`
 }
 
 type Podiums struct {
@@ -57,4 +58,12 @@ type RecordMessage struct {
 	Player  model.Player  `json:"Player"`
 	Score   model.Score   `json:"Score"`
 	Contest model.Contest `json:"Contest"`
+}
+
+type PlayerDetail struct {
+	model.Player
+
+	ContestNumber       int `json:"ContestNumber"`
+	ValidRecoveryNumber int `json:"ValidRecoveryNumber"`
+	RecoveryNumber      int `json:"RecoveryNumber"`
 }

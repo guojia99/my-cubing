@@ -56,12 +56,13 @@ func (c *Client) initRoute() {
 			rp.GET("/contest/:contest_id/sor", report.ContestSorReport(c.svc))       // 某比赛的sor
 			rp.GET("/contest/:contest_id/score", report.ContestScoreReport(c.svc))   // 某比赛的成绩统计
 			rp.GET("/contest/:contest_id/podium", report.ContestPodiumReport(c.svc)) // 某场比赛领奖台
-			rp.GET("/contest/:contest_id/record", report.ContestRecord(c.svc))
+			rp.GET("/contest/:contest_id/record", report.ContestRecord(c.svc))       // 某场比赛的记录
 
 			// 具体到个人
 			rp.GET("/player/:player_id/best", report.PlayerBest(c.svc))           // 某玩家的最佳成绩
-			rp.GET("/player/:player_id/podium", report.PlayerPodiumReport(c.svc)) // 某个玩家的领奖台
 			rp.GET("/player/:player_id/score", report.PlayerScoreReport(c.svc))   // 某个玩家的成绩汇总
+			rp.GET("/player/:player_id/podium", report.PlayerPodiumReport(c.svc)) // 某个玩家的领奖台
+			rp.GET("/player/:player_id/record", report.PlayerRecord(c.svc))       // 某个玩家的记录
 		}
 	}
 }
