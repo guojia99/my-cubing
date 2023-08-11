@@ -29,10 +29,16 @@ type ScoresByContest struct {
 }
 
 type Podiums struct {
-	Player model.Player `json:"Player"`
-	Gold   int64        `json:"Gold"`
-	Silver int64        `json:"Silver"`
-	Bronze int64        `json:"Bronze"`
+	Player         model.Player    `json:"Player"`
+	Gold           int64           `json:"Gold"`
+	Silver         int64           `json:"Silver"`
+	Bronze         int64           `json:"Bronze"`
+	PodiumsResults []PodiumsResult `json:"PodiumsResults,omitempty"`
+}
+
+type PodiumsResult struct {
+	Contest model.Contest `json:"Contest"`
+	Score   model.Score   `json:"Score"`
 }
 
 type SorScore struct {

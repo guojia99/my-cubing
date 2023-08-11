@@ -524,7 +524,11 @@ func (c *client) getPodiumsByPlayer(playerID uint) Podiums {
 	// 查选手所有比赛的成绩
 	for _, contest := range contests {
 		topThree := c.getContestTop(contest.ID, 3)
-		for _, score := range topThree {
+		for _, pj := range model.WCAProjectRoute() {
+			score, ok := topThree[pj]
+			if !ok {
+				continue
+			}
 			for idx, val := range score {
 				if val.PlayerID == playerID {
 					switch idx {
@@ -535,6 +539,10 @@ func (c *client) getPodiumsByPlayer(playerID uint) Podiums {
 					case 2:
 						out.Bronze += 1
 					}
+					out.PodiumsResults = append(out.PodiumsResults, PodiumsResult{
+						Contest: contest,
+						Score:   score[idx],
+					})
 				}
 			}
 		}
