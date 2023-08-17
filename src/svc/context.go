@@ -50,6 +50,10 @@ func NewContext(config string) (*Context, error) {
 		return nil, err
 	}
 
+	//if err = ctx.DB.AutoMigrate(model.Models...); err != nil {
+	//	return nil, err
+	//}
+
 	ctx.Core = core.NewScoreCore(ctx.DB, ctx.Cfg.Debug)
 	return ctx, nil
 }

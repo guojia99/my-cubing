@@ -18,16 +18,8 @@ func (c *Client) initRoute() {
 	api := c.e.Group("/v2/api")
 	api.GET("/swagger/*any", ginSwagger.WrapHandler(swagFile.Handler))
 
-	{
-		// 基础查询
-		api.GET("/contest", result.GetContests(c.svc))
-		api.GET("/contest/:contest_id", result.GetContest(c.svc))
-		api.GET("/player", result.GetPlayers(c.svc))
-		api.GET("/player/:player_id", result.GetPlayer(c.svc))
-	}
+	{ // 后台
 
-	{
-		// 后台
 		api.GET("/auth/token", c.GetToken) // 获取授权
 
 		api.POST("/contest", c.AuthMiddleware, result.CreateContest(c.svc))               // 添加比赛
@@ -42,8 +34,20 @@ func (c *Client) initRoute() {
 
 	}
 
-	{
-		// 榜单
+	{ //开发日志，关键点
+		xLog := api.Group("x-log")
+		xLog.GET("/")
+		xLog.PUT("/")
+	}
+
+	{ // 基础查询
+		api.GET("/contest", result.GetContests(c.svc))
+		api.GET("/contest/:contest_id", result.GetContest(c.svc))
+		api.GET("/player", result.GetPlayers(c.svc))
+		api.GET("/player/:player_id", result.GetPlayer(c.svc))
+	}
+
+	{ // 榜单
 		rp := api.Group("/report")
 		{
 			// 排行榜

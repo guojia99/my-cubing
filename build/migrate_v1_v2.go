@@ -124,8 +124,8 @@ func AddPlayer(token string, name string, wcaID string) error {
 	if err != nil {
 		return err
 	}
-	if res.StatusCode > 400 {
-		return fmt.Errorf("error")
+	if res.StatusCode >= 400 {
+		return fmt.Errorf("error %s", string(body))
 	}
 	return nil
 }
@@ -250,6 +250,8 @@ func main() {
 
 	dbDSN := "root:my123456@tcp(127.0.0.1:3306)/mycube?charset=utf8&parseTime=True&loc=Local"
 	db, err := gorm.Open(mysql.New(mysql.Config{DSN: dbDSN}), &gorm.Config{})
+	//
+	//db, err := gorm.Open(sqlite.Open("back.db"), &gorm.Config{})
 	if err != nil {
 		log.Printf("error %s\n", err)
 		return

@@ -70,14 +70,21 @@ func CreatePlayer(svc *svc.Context) gin.HandlerFunc {
 
 		var player model.Player
 		if err := svc.DB.Where("name = ?", req.Name).First(&player).Error; err == nil {
-			player.WcaID, player.ActualName = req.WcaID, req.ActualName
+			player = model.Player{
+				Model:      req.Model,
+				Name:       req.Name,
+				WcaID:      req.WcaID,
+				ActualName: req.ActualName,
+				Titles:     req.Titles,
+			}
+			player.SetTitles(req.TitlesVal)
 			svc.DB.Save(&player)
 			ctx.JSON(http.StatusOK, gin.H{})
 			return
 		}
 
 		if err := svc.DB.Create(&req).Error; err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 		ctx.JSON(http.StatusOK, gin.H{})

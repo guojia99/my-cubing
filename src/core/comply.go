@@ -260,9 +260,6 @@ func (c *client) getAllPlayerBestScore() (bestSingle, bestAvg map[model.Project]
 			}
 		}
 
-		// sort
-		//sort.Slice(bestSingle[project], func(i, j int) bool { return bestSingle[project][i].IsBestScore(bestSingle[project][j]) })
-		//sort.Slice(bestAvg[project], func(i, j int) bool { return bestAvg[project][i].IsBestAvgScore(bestAvg[project][j]) })
 		model.SortByBest(bestSingle[project])
 		model.SortByAvg(bestAvg[project])
 	}

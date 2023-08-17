@@ -86,7 +86,7 @@ func GetContests(svc *svc.Context) gin.HandlerFunc {
 		// Try to get the cache.
 		page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
 		size, _ := strconv.Atoi(ctx.DefaultQuery("size", "20"))
-		typ, _ := strconv.Atoi(ctx.DefaultQuery("type", OnLine))
+		typ, _ := ctx.GetQuery("type")
 		if size > 100 {
 			size = 100
 		}
@@ -94,7 +94,7 @@ func GetContests(svc *svc.Context) gin.HandlerFunc {
 		offset := (page - 1) * size
 		limit := size
 
-		key := fmt.Sprintf("GetContests_%d_%d", page, size)
+		key := fmt.Sprintf("GetContests_%s_%d_%d", typ, page, size)
 		if val, ok := svc.Cache.Get(key); ok {
 			ctx.JSON(http.StatusOK, val)
 			return
@@ -102,13 +102,18 @@ func GetContests(svc *svc.Context) gin.HandlerFunc {
 
 		// Find Contests.
 		var contests []model.Contest
-		if err := svc.DB.Where("c_type = ?", typ).Order("created_at DESC").Order("id DESC").Offset(offset).Limit(limit).Find(&contests).Error; err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
+		var err error
+		var count int64
+
+		if typ == "" {
+			err = svc.DB.Order("created_at DESC").Order("id DESC").Offset(offset).Limit(limit).Find(&contests).Error
+			svc.DB.Model(&model.Contest{}).Count(&count)
+		} else {
+			err = svc.DB.Where("c_type = ?", typ).Order("created_at DESC").Order("id DESC").Offset(offset).Limit(limit).Find(&contests).Error
+			svc.DB.Model(&model.Contest{}).Where("c_type = ?", typ).Count(&count)
 		}
 
-		var count int64
-		if err := svc.DB.Model(&model.Contest{}).Where("c_type = ?", typ).Count(&count).Error; err != nil {
+		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}

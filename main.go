@@ -49,6 +49,9 @@ func NewAdminCmd() *cobra.Command {
 				return err
 			}
 
+			if err = svcCli.DB.AutoMigrate(&api.Admin{}); err != nil {
+				return err
+			}
 			err = svcCli.DB.Save(&api.Admin{
 				UserName: name,
 				Password: password,
