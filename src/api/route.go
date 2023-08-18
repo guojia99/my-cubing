@@ -20,7 +20,7 @@ func (c *Client) initRoute() {
 
 	{ // 后台
 
-		api.GET("/auth/token", c.GetToken) // 获取授权
+		api.POST("/auth/token", c.ValidToken) // 获取授权
 
 		api.POST("/contest", c.AuthMiddleware, result.CreateContest(c.svc))               // 添加比赛
 		api.DELETE("/contest/:contest_id", c.AuthMiddleware, result.DeleteContest(c.svc)) // 删除比赛

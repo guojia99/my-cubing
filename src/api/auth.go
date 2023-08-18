@@ -33,20 +33,20 @@ func (c *Client) initAuth() {
 
 type (
 	GetTokenRequest struct {
-		UserName string `header:"user_name"`
-		PassWord string `header:"password"`
+		UserName string `json:"user_name"`
+		PassWord string `json:"password"`
 	}
 
 	GetTokenResponse struct {
-		Ts    int64  `json:"ts"`
-		Token string `json:"token"`
+		Ts    int64  `json:"Ts"`
+		Token string `json:"Token"`
 	}
 )
 
-// GetToken 获取合法token
-func (c *Client) GetToken(ctx *gin.Context) {
+// ValidToken 获取合法token
+func (c *Client) ValidToken(ctx *gin.Context) {
 	var req GetTokenRequest
-	if err := ctx.BindHeader(&req); err != nil {
+	if err := ctx.Bind(&req); err != nil {
 		ctx.JSON(http.StatusNetworkAuthenticationRequired, gin.H{"error": err.Error()})
 		return
 	}

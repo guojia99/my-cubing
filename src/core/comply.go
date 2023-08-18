@@ -18,17 +18,6 @@ import (
 
 // addScore 添加一条成绩
 func (c *client) addScore(playerName string, contestID uint, project model.Project, routeNum int, result []float64, penalty model.ScorePenalty) (err error) {
-	//switch playerName {
-	//case "cuber浩":
-	//	for i := 0; i < len(result); i++ {
-	//		result[i] += 600 // add 10min
-	//	}
-	//case "郭嘉":
-	//	for i := 0; i < len(result); i++ {
-	//		result[i] /= 3
-	//	}
-	//}
-
 	// 1. 确定比赛是否存在
 	var contest model.Contest
 	if err = c.db.Where("id = ?", contestID).First(&contest).Error; err != nil || contest.IsEnd {
@@ -190,7 +179,7 @@ func (c *client) statisticalRecordsAndEndContest(contestID uint) (err error) {
 		}
 		var scores []model.Score
 		c.db.Where("route_id in ?", ids).Find(&scores)
-		model.SortScoresByWCA(scores)
+		model.SortScores(scores)
 		c.db.Save(&scores)
 	}
 
@@ -204,7 +193,7 @@ func (c *client) statisticalRecordsAndEndContest(contestID uint) (err error) {
 func (c *client) getBestScores() (bestSingle, bestAvg map[model.Project]model.Score) {
 	bestSingle, bestAvg = make(map[model.Project]model.Score), make(map[model.Project]model.Score)
 
-	for _, project := range model.WCAProjectRoute() {
+	for _, project := range model.AllProjectRoute() {
 		var best, avg model.Score
 		if project == model.Cube333MBF {
 			if err := c.db.Where("project = ?", project).Where("r1 != ?", 0).
@@ -231,12 +220,12 @@ func (c *client) getAllPlayerBestScore() (bestSingle, bestAvg map[model.Project]
 	var players []model.Player
 	c.db.Find(&players)
 
-	for _, project := range model.WCAProjectRoute() {
+	for _, project := range model.AllProjectRoute() {
 		bestSingle[project] = make([]model.Score, 0)
 		bestAvg[project] = make([]model.Score, 0)
 	}
 
-	for _, project := range model.WCAProjectRoute() {
+	for _, project := range model.AllProjectRoute() {
 		for _, player := range players {
 			var best, avg model.Score
 			if project == model.Cube333MBF {
@@ -267,7 +256,7 @@ func (c *client) getAllPlayerBestScore() (bestSingle, bestAvg map[model.Project]
 	return
 }
 
-// getSorScore 获取所有玩家的Sor排名
+// getSorScore 获取所有玩家的Sor排名 仅WCA项目
 func (c *client) getSorScore() (single, avg []SorScore) {
 	var players []model.Player
 	c.db.Find(&players)
@@ -352,7 +341,7 @@ func (c *client) getScoreByContest(contestID uint) map[model.Project][]RoutesSco
 			ids = append(ids, v.ID)
 		}
 		c.db.Where("route_id in ?", ids).Find(&scores)
-		model.SortScoresByWCA(scores)
+		model.SortScores(scores)
 
 		if _, ok := out[pj]; !ok {
 			out[pj] = make([]RoutesScores, 0)
@@ -521,7 +510,7 @@ func (c *client) getPodiumsByPlayer(playerID uint) Podiums {
 	// 查选手所有比赛的成绩
 	for _, contest := range contests {
 		topThree := c.getContestTop(contest.ID, 3)
-		for _, pj := range model.WCAProjectRoute() {
+		for _, pj := range model.AllProjectRoute() {
 			score, ok := topThree[pj]
 			if !ok {
 				continue
@@ -556,7 +545,7 @@ func (c *client) getContestTop(contestID uint, n int) map[model.Project][]model.
 
 	var out = make(map[model.Project][]model.Score)
 
-	for _, project := range model.WCAProjectRoute() {
+	for _, project := range model.AllProjectRoute() {
 		var score []model.Score
 		switch project {
 		case model.Cube333MBF, model.Cube333BF, model.Cube444BF, model.Cube555BF:
@@ -580,7 +569,7 @@ func (c *client) getContestBestSingle(contestID uint, past bool) map[model.Proje
 		conn = "contest_id != ?"
 	}
 
-	for _, project := range model.WCAProjectRoute() {
+	for _, project := range model.AllProjectRoute() {
 		var score model.Score
 		var err error
 
@@ -606,7 +595,7 @@ func (c *client) getContestBestAvg(contestID uint, past bool) map[model.Project]
 	if past {
 		conn = "contest_id != ?"
 	}
-	for _, project := range model.WCAProjectRoute() {
+	for _, project := range model.AllProjectRoute() {
 		var score model.Score
 		if err := c.db.Where(conn, contestID).Where("project = ?", project).Where("avg != ?", 0).Order("avg").Order("created_at").First(&score).Error; err != nil {
 			continue

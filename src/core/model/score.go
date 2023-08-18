@@ -54,34 +54,11 @@ func (s *Score) SetResult(in []float64, penalty ScorePenalty) error {
 		in = append(in, DNF)
 	}
 
-	switch s.Project {
-	case JuBaoHaoHao, OtherCola:
+	switch s.Project.Route() {
+	case 1:
 		s.Result1, s.Best, s.Avg = in[0], in[0], in[0]
 		s.Result1 += float64(len(penalty.R1) * 2)
-	case Cube222, Cube333, Cube444, Cube555, CubeSk, CubePy, CubeSq1, CubeMinx, CubeClock, Cube333OH, Cube333Ft:
-		s.Result1, s.Result2, s.Result3, s.Result4, s.Result5 =
-			in[0]+float64(len(penalty.R1)*2),
-			in[1]+float64(len(penalty.R2)*2),
-			in[2]+float64(len(penalty.R3)*2),
-			in[3]+float64(len(penalty.R4)*2),
-			in[4]+float64(len(penalty.R5)*2)
-
-		cache := in
-		sort.Slice(cache, func(i, j int) bool { return cache[i] < cache[j] })
-		for i := 0; i < len(cache); i++ {
-			if cache[i] != 0 {
-				s.Best = cache[i]
-				break
-			}
-		}
-
-		switch d := s.D(); d {
-		case 1:
-			s.Avg = (cache[2] + cache[3] + cache[4]) / 3 // 有一把D的情况下, 去掉最好成绩后取平均
-		default:
-			s.Avg = (cache[1] + cache[2] + cache[3]) / 3 // 正常去头尾
-		}
-	case Cube666, Cube777, Cube333FM, Cube333BF, Cube444BF, Cube555BF: // 三次的项目
+	case 3:
 		s.Result1, s.Result2, s.Result3 =
 			in[0]+float64(len(penalty.R1)*2),
 			in[1]+float64(len(penalty.R2)*2),
@@ -98,13 +75,39 @@ func (s *Score) SetResult(in []float64, penalty ScorePenalty) error {
 		if s.D() == 0 {
 			s.Avg = (s.Result1 + s.Result2 + s.Result3) / 3
 		}
-	case Cube333MBF:
-		s.Result1, s.Result2, s.Result3 = in[0], in[1], in[2]
-		s.Result3 += float64(len(penalty.R3) * 2)
-		if s.Result1 >= 2 { // 两把以上才有最佳成绩, 该成绩才有效
-			s.Best = s.Result1
+	case 5:
+		s.Result1, s.Result2, s.Result3, s.Result4, s.Result5 =
+			in[0]+float64(len(penalty.R1)*2),
+			in[1]+float64(len(penalty.R2)*2),
+			in[2]+float64(len(penalty.R3)*2),
+			in[3]+float64(len(penalty.R4)*2),
+			in[4]+float64(len(penalty.R5)*2)
+
+		cache := in
+		sort.Slice(cache, func(i, j int) bool { return cache[i] < cache[j] })
+		for i := 0; i < len(cache); i++ {
+			if cache[i] != 0 {
+				s.Best = cache[i]
+				break
+			}
+		}
+		switch d := s.D(); d {
+		case 1:
+			s.Avg = (cache[2] + cache[3] + cache[4]) / 3 // 有一把D的情况下, 去掉最好成绩后取平均
+		default:
+			s.Avg = (cache[1] + cache[2] + cache[3]) / 3 // 正常去头尾
+		}
+	case -1: // MBF
+		switch s.Project {
+		case Cube333MBF:
+			s.Result1, s.Result2, s.Result3 = in[0], in[1], in[2]
+			s.Result3 += float64(len(penalty.R3) * 2)
+			if s.Result1 >= 2 { // 两把以上才有最佳成绩, 该成绩才有效
+				s.Best = s.Result1
+			}
 		}
 	}
+
 	return nil
 }
 
@@ -170,42 +173,39 @@ func (s *Score) IsBestAvgScore(other Score) bool {
 	}
 }
 
-// SortScoresByWCA sort scores by WCA.
-func SortScoresByWCA(in []Score) {
+// SortScores sort scores by WCA.
+func SortScores(in []Score) {
 	if len(in) == 0 {
 		return
 	}
 	sort.Slice(in, func(i, j int) bool {
-		switch in[i].Project {
-		// blind only use best score rank.
-		case Cube333MBF, Cube333BF, Cube444BF, Cube555BF:
+
+		if in[i].Project.IsBF() {
 			return in[i].IsBestScore(in[j])
-		default:
-			// all not average score.
-			if in[i].Avg+in[j].Avg == 0 {
-				return in[i].IsBestScore(in[j])
-			}
-			// identical score point average for best rank.
-			if in[i].Avg == in[j].Avg {
-				return in[i].IsBestScore(in[j])
-			}
-			// One of them has an average score, sorted by average score.
-			return in[i].IsBestAvgScore(in[j])
 		}
+		// all not average score.
+		if in[i].Avg+in[j].Avg == 0 {
+			return in[i].IsBestScore(in[j])
+		}
+		// identical score point average for best rank.
+		if in[i].Avg == in[j].Avg {
+			return in[i].IsBestScore(in[j])
+		}
+		// One of them has an average score, sorted by average score.
+		return in[i].IsBestAvgScore(in[j])
 	})
 
 	// add rank in scores, the identical score rank number equal.
 	in[0].Rank = 1
 	prev := in[0]
 	for i := 1; i < len(in); i++ {
-		switch in[i].Project {
-		case Cube333MBF, Cube333BF, Cube444BF, Cube555BF:
+		if in[i].Project.IsBF() {
 			if in[i].Best == prev.Best {
 				in[i].Rank = prev.Rank
 				break
 			}
 			in[i].Rank = prev.Rank + 1
-		default:
+		} else {
 			if in[i].Avg == 0 && in[i].Best == prev.Best {
 				in[i].Rank = prev.Rank
 				break
