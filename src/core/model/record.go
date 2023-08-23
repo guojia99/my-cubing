@@ -14,8 +14,9 @@ const (
 type Record struct {
 	Model
 
-	RType      uint   `json:"RType" gorm:"column:rtype"`                         // 记录类型
-	ScoreId    uint   `json:"score_id" gorm:"column:score_id"`                   // 成绩记录位置
+	RType      uint   `json:"RType" gorm:"column:rtype"`       // 记录类型
+	ScoreId    uint   `json:"score_id" gorm:"column:score_id"` // 成绩记录位置
+	ScoreValue Score  `json:"ScoreValue" gorm:"-"`
 	PlayerID   uint   `json:"PlayerID" gorm:"index;not null;column:player_id"`   // 选手的ID
 	PlayerName string `json:"PlayerName" gorm:"column:player_name"`              // 玩家名
 	ContestID  uint   `json:"ContestID" gorm:"index;not null;column:contest_id"` // 比赛的ID

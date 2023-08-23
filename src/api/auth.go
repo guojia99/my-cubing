@@ -50,7 +50,6 @@ func (c *Client) ValidToken(ctx *gin.Context) {
 		ctx.JSON(http.StatusNetworkAuthenticationRequired, gin.H{"error": err.Error()})
 		return
 	}
-
 	if req.UserName == "" || req.PassWord == "" {
 		ctx.JSON(http.StatusNetworkAuthenticationRequired, gin.H{"error": "request has empty"})
 		return
@@ -60,6 +59,7 @@ func (c *Client) ValidToken(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, token.(GetTokenResponse))
 		return
 	}
+
 	var admin Admin
 	if err := c.svc.DB.Where("user_name = ?", req.UserName).First(&admin).Error; err != nil {
 		ctx.JSON(http.StatusNetworkAuthenticationRequired, gin.H{"error": err.Error()})
@@ -69,7 +69,7 @@ func (c *Client) ValidToken(ctx *gin.Context) {
 		ctx.JSON(http.StatusNetworkAuthenticationRequired, gin.H{"error": "password error"})
 		return
 	}
-	if time.Now().Sub(admin.Timeout) > time.Hour*48 || admin.Token == "" {
+	if time.Now().Sub(admin.Timeout) > 0 || admin.Token == "" {
 		admin.Token = generateUniqueToken(req.UserName, time.Now().Unix())
 		admin.Timeout = time.Now().Add(time.Hour * 48)
 		c.svc.DB.Save(&admin)

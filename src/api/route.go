@@ -31,7 +31,6 @@ func (c *Client) initRoute() {
 		api.POST("/score", c.AuthMiddleware, result.CreateScore(c.svc))           // 上传成绩
 		api.DELETE("/score", c.AuthMiddleware, result.DeleteScore(c.svc))         // 删除成绩
 		api.PUT("/score/end_contest", c.AuthMiddleware, result.EndContest(c.svc)) // 结束比赛并统计
-
 	}
 
 	{ //开发日志，关键点
@@ -41,6 +40,7 @@ func (c *Client) initRoute() {
 	}
 
 	{ // 基础查询
+		api.GET("/record", result.GetRecords(c.svc))
 		api.GET("/contest", result.GetContests(c.svc))
 		api.GET("/contest/:contest_id", result.GetContest(c.svc))
 		api.GET("/player", result.GetPlayers(c.svc))
