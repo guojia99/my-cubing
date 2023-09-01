@@ -11,9 +11,8 @@ import (
 )
 
 const (
-	DNF = 0  // 未还原成功
-	DNS = -1 // 未开始还原
-
+	DNF = -10000 - iota // 未还原成功
+	DNS                 // 未开始还原
 )
 
 // Score 成绩表
@@ -49,100 +48,96 @@ type ScorePenalty struct {
 	R5 []int `json:"R5,omitempty"`
 }
 
+func (s *Score) DBest() bool { return s.Best <= DNF }
+func (s *Score) DAvg() bool  { return s.Avg <= DNF }
+
 func (s *Score) SetResult(in []float64, penalty ScorePenalty) error {
 	for len(in) < 5 {
-		in = append(in, DNF)
+		in = append(in, 0)
 	}
 
-	switch s.Project.Route() {
-	case 1:
+	s.Result1, s.Result2, s.Result3, s.Result4, s.Result5 = in[0], in[1], in[2], in[3], in[4]
+	s.Best, s.Avg = DNF, DNF
+
+	switch s.Project.RouteType() {
+	case RouteType1rounds:
+		s.Result1 = s.Result1 + float64(len(penalty.R1)*2)
 		s.Result1, s.Best, s.Avg = in[0], in[0], in[0]
-		s.Result1 += float64(len(penalty.R1) * 2)
-	case 3:
+	case RouteType3roundsAvg, RouteType3roundsBest:
 		s.Result1, s.Result2, s.Result3 =
-			in[0]+float64(len(penalty.R1)*2),
-			in[1]+float64(len(penalty.R2)*2),
-			in[2]+float64(len(penalty.R3)*2)
+			s.Result1+float64(len(penalty.R1)*2),
+			s.Result2+float64(len(penalty.R2)*2),
+			s.Result3+float64(len(penalty.R3)*2)
 
 		cache := []float64{in[0], in[1], in[2]}
 		sort.Slice(cache, func(i, j int) bool { return cache[i] < cache[j] })
 		for i := 0; i < len(cache); i++ {
-			if cache[i] > 0 {
-				s.Best = cache[i]
-				break
+			if cache[i] <= DNF {
+				continue
 			}
+			s.Best = cache[i]
 		}
 		if s.D() == 0 {
 			s.Avg = (s.Result1 + s.Result2 + s.Result3) / 3
 		}
-	case 5:
+	case RouteType5roundsAvg, RouteType5roundsBest, RouteType5RoundsAvgHT:
 		s.Result1, s.Result2, s.Result3, s.Result4, s.Result5 =
-			in[0]+float64(len(penalty.R1)*2),
-			in[1]+float64(len(penalty.R2)*2),
-			in[2]+float64(len(penalty.R3)*2),
-			in[3]+float64(len(penalty.R4)*2),
-			in[4]+float64(len(penalty.R5)*2)
+			s.Result1+float64(len(penalty.R1)*2),
+			s.Result2+float64(len(penalty.R2)*2),
+			s.Result3+float64(len(penalty.R3)*2),
+			s.Result4+float64(len(penalty.R4)*2),
+			s.Result5+float64(len(penalty.R5)*2)
 
 		cache := in
 		sort.Slice(cache, func(i, j int) bool { return cache[i] < cache[j] })
 		for i := 0; i < len(cache); i++ {
-			if cache[i] != 0 {
-				s.Best = cache[i]
-				break
+			if cache[i] <= DNF {
+				continue
 			}
+			s.Best = cache[i]
 		}
-		switch d := s.D(); d {
-		case 1:
-			s.Avg = (cache[2] + cache[3] + cache[4]) / 3 // 有一把D的情况下, 去掉最好成绩后取平均
-		default:
-			s.Avg = (cache[1] + cache[2] + cache[3]) / 3 // 正常去头尾
-		}
-	case -1: // MBF
-		switch s.Project {
-		case Cube333MBF:
-			s.Result1, s.Result2, s.Result3 = in[0], in[1], in[2]
-			s.Result3 += float64(len(penalty.R3) * 2)
-			if s.Result1 >= 2 { // 两把以上才有最佳成绩, 该成绩才有效
-				s.Best = s.Result1
-			}
-		}
-	}
 
+		if s.Project.RouteType() == RouteType5RoundsAvgHT {
+			switch d := s.D(); d {
+			case 1:
+				s.Avg = (cache[2] + cache[3] + cache[4]) / 3 // 有一把D的情况下, 去掉最好成绩后取平均
+			case 0:
+				s.Avg = (cache[1] + cache[2] + cache[3]) / 3 // 正常去头尾
+			}
+			break
+		}
+
+		s.Avg = (s.Result1 + s.Result2 + s.Result3 + s.Result4 + s.Result5) / 5
+		if s.D() > 0 {
+			s.Avg = DNF
+		}
+	case RouteTypeRepeatedly:
+		if s.Result1 < 2 {
+			break
+		}
+		s.Result3 += float64(len(penalty.R3) * 2)
+		s.Best = s.Result1 - (s.Result2 - s.Result1)
+	}
 	return nil
 }
 
 func (s *Score) GetResult() []float64 {
-	switch s.Project {
-	case Cube666, Cube777, Cube333FM, Cube333BF, Cube444BF, Cube555BF, Cube333MBF: // 三次的项目
-		return []float64{s.Result1, s.Result2, s.Result3}
-	case JuBaoHaoHao, OtherCola:
-		return []float64{s.Result1}
-	default:
-		return []float64{s.Result1, s.Result2, s.Result3, s.Result4, s.Result5}
-	}
+	return []float64{s.Result1, s.Result2, s.Result3, s.Result4, s.Result5}
 }
 
 func (s *Score) D() int {
-	switch s.Project {
-	case Cube333MBF:
-		if s.Best == 0 {
-			return 0
+	d := 0
+	for _, val := range s.GetResult() {
+		if val <= DNF {
+			d += 1
 		}
-		return 1
-	default:
-		d := 0
-		for _, val := range s.GetResult() {
-			if val <= 0 {
-				d += 1
-			}
-		}
-		return d
 	}
+	return d
 }
 
 func (s *Score) IsBestScore(other Score) bool {
-	switch s.Project {
-	case Cube333MBF:
+	switch s.Project.RouteType() {
+	case RouteTypeRepeatedly:
 		// blind cube special rules:
 		// - the result1 is number of successful recovery.
 		// - the result2 is number of attempts to recover.
@@ -154,20 +149,26 @@ func (s *Score) IsBestScore(other Score) bool {
 		}
 		return s.Result1 > other.Result1
 	default:
-		if s.Best == 0 || other.Best == 0 {
-			return s.Best == 0
+		if s.DBest() || other.DBest() {
+			return s.DBest()
+		}
+		if s.Best == other.Best {
+			return s.Avg < other.Avg
 		}
 		return s.Best < other.Best
 	}
 }
 
 func (s *Score) IsBestAvgScore(other Score) bool {
-	switch s.Project {
-	case Cube333MBF:
+	switch s.Project.RouteType() {
+	case RouteTypeRepeatedly:
 		return true
 	default:
-		if s.Avg == 0 || other.Avg == 0 {
-			return s.Best == 0
+		if s.DAvg() || other.DAvg() {
+			return s.DAvg()
+		}
+		if s.DAvg() && other.DAvg() {
+			return s.IsBestScore(other)
 		}
 		return s.Avg < other.Avg
 	}
@@ -178,51 +179,50 @@ func SortScores(in []Score) {
 	if len(in) == 0 {
 		return
 	}
-	sort.Slice(in, func(i, j int) bool {
 
-		if in[i].Project.IsBF() {
+	ro := in[0].Project.RouteType()
+
+	sort.Slice(in, func(i, j int) bool {
+		switch ro {
+		case RouteType1rounds, RouteType3roundsBest, RouteType5roundsBest, RouteTypeRepeatedly:
 			return in[i].IsBestScore(in[j])
+		case RouteType3roundsAvg, RouteType5roundsAvg, RouteType5RoundsAvgHT:
+			if in[i].DAvg() && in[j].DAvg() {
+				return in[i].IsBestScore(in[j])
+			}
+			if in[i].DAvg() || in[j].DAvg() {
+				return in[i].DAvg()
+			}
+			return in[i].IsBestAvgScore(in[j])
 		}
-		// all not average score.
-		if in[i].Avg+in[j].Avg == 0 {
-			return in[i].IsBestScore(in[j])
-		}
-		// identical score point average for best rank.
-		if in[i].Avg == in[j].Avg {
-			return in[i].IsBestScore(in[j])
-		}
-		// One of them has an average score, sorted by average score.
-		return in[i].IsBestAvgScore(in[j])
+		return true
 	})
 
 	// add rank in scores, the identical score rank number equal.
 	in[0].Rank = 1
 	prev := in[0]
 	for i := 1; i < len(in); i++ {
-		if in[i].Project.IsBF() {
+		switch ro {
+		case RouteTypeRepeatedly:
+			if in[i].Best == prev.Best && in[i].Result3 == prev.Result3 {
+				in[i].Rank = prev.Rank
+				break
+			}
+			in[i].Rank += prev.Rank + 1
+		case RouteType1rounds:
 			if in[i].Best == prev.Best {
 				in[i].Rank = prev.Rank
 				break
 			}
-			in[i].Rank = prev.Rank + 1
-		} else {
-			if in[i].Avg == 0 && in[i].Best == prev.Best {
+			in[i].Rank += prev.Rank + 1
+		case RouteType3roundsBest, RouteType5roundsBest, RouteType3roundsAvg, RouteType5roundsAvg, RouteType5RoundsAvgHT:
+			if in[i].Best == prev.Best && in[i].Avg == prev.Avg {
 				in[i].Rank = prev.Rank
 				break
 			}
-			if in[i].Avg == prev.Avg {
-				in[i].Rank = prev.Rank
-				break
-			}
-			in[i].Rank = prev.Rank + 1
+			in[i].Rank += prev.Rank + 1
 		}
 		prev = in[i]
-	}
-
-	for i := 0; i < len(in); i++ {
-		if in[i].Project == Cube333MBF && in[i].Best == 0 {
-			in[i].Rank = 0
-		}
 	}
 }
 
@@ -244,7 +244,7 @@ func SortByBest(in []Score) {
 	}
 
 	for i := 0; i < len(in); i++ {
-		if in[i].Project == Cube333MBF && in[i].Best == 0 {
+		if in[i].Project.RouteType() == RouteTypeRepeatedly && in[i].Best == 0 {
 			in[i].Rank = 0
 		}
 	}

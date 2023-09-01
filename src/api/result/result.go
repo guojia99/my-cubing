@@ -5,3 +5,18 @@
  */
 
 package result
+
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+
+	"github.com/guojia99/my-cubing/src/core/model"
+	"github.com/guojia99/my-cubing/src/svc"
+)
+
+func ProjectList(svc *svc.Context) func(ctx *gin.Context) {
+	return func(ctx *gin.Context) {
+		ctx.JSON(http.StatusOK, model.AllProjectItem())
+	}
+}

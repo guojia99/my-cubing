@@ -26,7 +26,11 @@ func (c *client) addScore(playerName string, contestID uint, project model.Proje
 
 	// 2. 获取轮次信息
 	var round model.Round
-	if err = c.db.Where("contest_id = ?", contestID).Where("project = ?", project).Where("number = ?", routeNum).First(&round).Error; err != nil {
+	if err = c.db.
+		Where("contest_id = ?", contestID).
+		Where("project = ?", project).
+		Where("number = ?", routeNum).
+		First(&round).Error; err != nil {
 		return err
 	}
 	if !round.IsStart {
@@ -42,8 +46,10 @@ func (c *client) addScore(playerName string, contestID uint, project model.Proje
 	// 4. 尝试找到本场比赛成绩
 	var score model.Score
 	err = c.db.Model(&model.Score{}).
-		Where("player_id = ?", player.ID).Where("contest_id = ?", contestID).
-		Where("route_id = ?", round.ID).First(&score).Error
+		Where("player_id = ?", player.ID).
+		Where("contest_id = ?", contestID).
+		Where("route_id = ?", round.ID).
+		First(&score).Error
 
 	if err != nil || score.ID == 0 {
 		score = model.Score{
@@ -71,18 +77,27 @@ func (c *client) addScore(playerName string, contestID uint, project model.Proje
 		bestSingle model.Score
 		bestAvg    model.Score
 	)
-	err = c.db.Where("player_id = ?", player.ID).Where("project = ?", project).
-		Where("best != ?", 0).Where("id != ?", score.ID).Order("best").First(&bestSingle).Error
-	if ((err != nil || bestSingle.Best == 0) && score.Best != 0) || (score.IsBestScore(bestSingle)) {
+	err = c.db.Where("player_id = ?", player.ID).
+		Where("project = ?", project).
+		Where("best > ?", model.DNF).
+		Where("id != ?", score.ID).
+		Order("best").
+		First(&bestSingle).Error
+	if ((err != nil || bestSingle.DBest()) && !score.DBest()) || (score.IsBestScore(bestSingle)) {
 		// 之前没有成绩, 且当前有成绩
 		// 之前有成绩, 当前成绩好
 		score.IsBestSingle = true
 		c.db.Save(&score)
 	}
 
-	err = c.db.Where("player_id = ?", player.ID).Where("project = ?", project).
-		Where("avg != ?", 0).Where("id != ?", score.ID).Order("avg").First(&bestAvg).Error
-	if ((err != nil || bestAvg.Avg == 0) && score.Avg != 0) || score.IsBestAvgScore(bestAvg) {
+	err = c.db.
+		Where("player_id = ?", player.ID).
+		Where("project = ?", project).
+		Where("avg > ?", model.DNF).
+		Where("id != ?", score.ID).
+		Order("avg").
+		First(&bestAvg).Error
+	if ((err != nil || bestAvg.DAvg()) && !score.DAvg()) || score.IsBestAvgScore(bestAvg) {
 		score.IsBestAvg = true
 		c.db.Save(&score)
 	}
@@ -99,7 +114,11 @@ func (c *client) removeScoreByContestID(playerName string, contestID uint, proje
 
 	// 2. 获取轮次信息
 	var round model.Round
-	if err = c.db.Where("contest_id = ?", contestID).Where("project = ?", project).Where("number = ?", routeNum).First(&round).Error; err != nil {
+	if err = c.db.
+		Where("contest_id = ?", contestID).
+		Where("project = ?", project).
+		Where("number = ?", routeNum).
+		First(&round).Error; err != nil {
 		return err
 	}
 
@@ -112,8 +131,10 @@ func (c *client) removeScoreByContestID(playerName string, contestID uint, proje
 	// 4. 尝试找到本场比赛成绩
 	var score model.Score
 	err = c.db.Model(&model.Score{}).
-		Where("player_id = ?", player.ID).Where("contest_id = ?", contestID).
-		Where("route_id = ?", round.ID).First(&score).Error
+		Where("player_id = ?", player.ID).
+		Where("contest_id = ?", contestID).
+		Where("route_id = ?", round.ID).
+		First(&score).Error
 
 	if err != nil {
 		return err
@@ -195,18 +216,32 @@ func (c *client) getBestScores() (bestSingle, bestAvg map[model.Project]model.Sc
 
 	for _, project := range model.AllProjectRoute() {
 		var best, avg model.Score
-		if project == model.Cube333MBF {
-			if err := c.db.Where("project = ?", project).Where("r1 != ?", 0).
-				Order("best").Order("r2 DESC").Order("r3").First(&best).Error; err == nil {
+		if project.RouteType() == model.RouteTypeRepeatedly {
+			if err := c.db.
+				Where("project = ?", project).
+				Where("bast > ?", model.DNF).
+				Order("best").
+				Order("r1 DESC").
+				Order("r2").
+				Order("r3").
+				First(&best).Error; err == nil {
 				bestSingle[project] = best
 			}
 			continue
 		}
 
-		if err := c.db.Where("best != ?", 0).Where("project = ?", project).Order("best").First(&best).Error; err == nil {
+		if err := c.db.
+			Where("best > ?", model.DNF).
+			Where("project = ?", project).
+			Order("best").
+			First(&best).Error; err == nil {
 			bestSingle[project] = best
 		}
-		if err := c.db.Where("avg != ?", 0).Where("project = ?", project).Order("avg").First(&avg).Error; err == nil {
+		if err := c.db.
+			Where("avg > ?", model.DNF).
+			Where("project = ?", project).
+			Order("avg").
+			First(&avg).Error; err == nil {
 			bestAvg[project] = avg
 		}
 	}
@@ -228,20 +263,37 @@ func (c *client) getAllPlayerBestScore() (bestSingle, bestAvg map[model.Project]
 	for _, project := range model.AllProjectRoute() {
 		for _, player := range players {
 			var best, avg model.Score
-			if project == model.Cube333MBF {
-				if err := c.db.Where("player_id = ?", player.ID).Where("project = ?", project).Where("r1 != ?", 0).
-					Order("best DESC").Order("r2").Order("r3").First(&best).Error; err == nil {
+			if project.RouteType() == model.RouteTypeRepeatedly {
+				if err := c.db.
+					Where("player_id = ?", player.ID).
+					Where("project = ?", project).
+					Where("bast > ?", model.DNF).
+					Order("best DESC").
+					Order("r1 DESC").
+					Order("r2").
+					Order("r3").
+					First(&best).Error; err == nil {
 					bestSingle[project] = append(bestSingle[project], best)
 				}
 				continue
 			}
-			if err := c.db.Where("player_id = ?", player.ID).Where("project = ?", project).Where("best != ?", 0).Order("best").First(&best).Error; err == nil {
+			if err := c.db.
+				Where("player_id = ?", player.ID).
+				Where("project = ?", project).
+				Where("best > ?", model.DNF).
+				Order("best").
+				First(&best).Error; err == nil {
 				var round model.Round
 				c.db.Where("id = ?", best.RouteID).First(&round)
 				best.RouteValue = round
 				bestSingle[project] = append(bestSingle[project], best)
 			}
-			if err := c.db.Where("player_id = ?", player.ID).Where("project = ?", project).Where("avg != ?", 0).Order("avg").First(&avg).Error; err == nil {
+			if err := c.db.
+				Where("player_id = ?", player.ID).
+				Where("project = ?", project).
+				Where("avg > ?", model.DNF).
+				Order("avg").
+				First(&avg).Error; err == nil {
 				var round model.Round
 				c.db.Where("id = ?", avg.RouteID).First(&round)
 				avg.RouteValue = round
@@ -313,7 +365,11 @@ func (c *client) getScoreByContest(contestID uint) map[model.Project][]RoutesSco
 		return nil
 	}
 	var rounds []model.Round
-	if err := c.db.Model(&model.Round{}).Where("id in ?", contest.GetRoundIds()).Order("number DESC").Find(&rounds).Error; err != nil {
+	if err := c.db.
+		Model(&model.Round{}).
+		Where("id in ?", contest.GetRoundIds()).
+		Order("number DESC").
+		Find(&rounds).Error; err != nil {
 		return nil
 	}
 
@@ -359,7 +415,11 @@ func (c *client) getScoreByContest(contestID uint) map[model.Project][]RoutesSco
 func (c *client) getSorScoreByContest(contestID uint) (single, avg []SorScore) {
 	// 查这场比赛所有选手
 	var playerIDs []uint64
-	c.db.Model(&model.Score{}).Distinct("player_id").Where("contest_id = ?", contestID).Pluck("player_id", &playerIDs)
+	c.db.
+		Model(&model.Score{}).
+		Distinct("player_id").
+		Where("contest_id = ?", contestID).
+		Pluck("player_id", &playerIDs)
 	if len(playerIDs) == 0 {
 		return
 	}
@@ -377,17 +437,34 @@ func (c *client) getSorScoreByContest(contestID uint) (single, avg []SorScore) {
 		bestAvgCache[project] = make([]model.Score, 0)
 		for _, player := range players {
 			var b, a model.Score
-			if project == model.Cube333MBF {
-				if err := c.db.Where("player_id = ?", player.ID).Where("project = ?", project).Where("r1 != ?", 0).
-					Order("best").Order("r2 DESC").Order("r3").First(&b).Error; err == nil {
+			if project.RouteType() == model.RouteTypeRepeatedly {
+				if err := c.db.
+					Where("player_id = ?", player.ID).
+					Where("project = ?", project).
+					Where("best > ?", model.DNF).
+					Order("best").
+					Order("r1 DESC").
+					Order("r2").
+					Order("r3").
+					First(&b).Error; err == nil {
 					bestSingleCache[project] = append(bestSingleCache[project], b)
 				}
 				continue
 			}
-			if err := c.db.Where("player_id = ?", player.ID).Where("project = ?", project).Where("best != ?", 0).Order("best").First(&b).Error; err == nil {
+			if err := c.db.
+				Where("player_id = ?", player.ID).
+				Where("project = ?", project).
+				Where("best > ?", model.DNF).
+				Order("best").
+				First(&b).Error; err == nil {
 				bestSingleCache[project] = append(bestSingleCache[project], b)
 			}
-			if err := c.db.Where("player_id = ?", player.ID).Where("project = ?", project).Where("avg != ?", 0).Order("avg").First(&a).Error; err == nil {
+			if err := c.db.
+				Where("player_id = ?", player.ID).
+				Where("project = ?", project).
+				Where("avg > ?", model.DNF).
+				Order("avg").
+				First(&a).Error; err == nil {
 				bestAvgCache[project] = append(bestAvgCache[project], a)
 			}
 		}
@@ -462,7 +539,10 @@ func (c *client) getPlayerScore(playerID uint) (bestSingle, bestAvg []model.Scor
 
 	for key, val := range cache {
 		var contest model.Contest
-		if err := c.db.Where("id = ?", key).Where("is_end = ?", 1).First(&contest).Error; err != nil {
+		if err := c.db.
+			Where("id = ?", key).
+			Where("is_end = ?", 1).
+			First(&contest).Error; err != nil {
 			continue
 		}
 		var rounds []model.Round
@@ -500,7 +580,11 @@ func (c *client) getPodiumsByPlayer(playerID uint) Podiums {
 
 	// 查选手参加过的所有比赛且结束的
 	var cacheContestId []uint
-	c.db.Model(&model.Score{}).Distinct("contest_id").Where("player_id = ?", playerID).Pluck("player_id", &cacheContestId)
+	c.db.
+		Model(&model.Score{}).
+		Distinct("contest_id").
+		Where("player_id = ?", playerID).
+		Pluck("player_id", &cacheContestId)
 	if len(cacheContestId) == 0 {
 		return out
 	}
@@ -545,13 +629,28 @@ func (c *client) getContestTop(contestID uint, n int) map[model.Project][]model.
 
 	var out = make(map[model.Project][]model.Score)
 
+	// todo 用全部差的方式会比较好
 	for _, project := range model.AllProjectRoute() {
 		var score []model.Score
-		switch project {
-		case model.Cube333MBF, model.Cube333BF, model.Cube444BF, model.Cube555BF:
-			c.db.Where("contest_id = ?", contestID).Where("project = ?", project).Where("best != ?", 0).Order("best").Limit(n).Find(&score)
+
+		switch project.RouteType() {
+		case model.RouteTypeRepeatedly, model.RouteType3roundsBest, model.RouteType1rounds, model.RouteType5roundsBest:
+			c.db.
+				Where("contest_id = ?", contestID).
+				Where("project = ?", project).
+				Where("best > ?", model.DNF).
+				Order("best").
+				Limit(n).
+				Find(&score)
 		default:
-			c.db.Where("contest_id = ?", contestID).Where("project = ?", project).Where("avg != ?", 0).Order("avg").Order("best").Limit(n).Find(&score)
+			c.db.
+				Where("contest_id = ?", contestID).
+				Where("project = ?", project).
+				Where("avg > ?", model.DNF).
+				Order("avg").
+				Order("best").
+				Limit(n).
+				Find(&score)
 		}
 		if len(score) > 0 {
 			out[project] = score
@@ -573,11 +672,25 @@ func (c *client) getContestBestSingle(contestID uint, past bool) map[model.Proje
 		var score model.Score
 		var err error
 
-		switch project {
-		case model.Cube333MBF:
-			err = c.db.Where(conn, contestID).Where("project = ?", project).Where("best != ?", 0).Order("best DESC").Order("r2").Order("r3").Order("created_at").First(&score).Error
+		switch project.RouteType() {
+		case model.RouteTypeRepeatedly:
+			err = c.db.
+				Where(conn, contestID).
+				Where("project = ?", project).
+				Where("best > ?", model.DNF).
+				Order("best DESC").
+				Order("r2").
+				Order("r3").
+				Order("created_at").
+				First(&score).Error
 		default:
-			err = c.db.Where(conn, contestID).Where("project = ?", project).Where("best != ?", 0).Order("best").Order("created_at").First(&score).Error
+			err = c.db.
+				Where(conn, contestID).
+				Where("project = ?", project).
+				Where("best > ?", model.DNF).
+				Order("best").
+				Order("created_at").
+				First(&score).Error
 		}
 		if err != nil {
 			continue
@@ -597,7 +710,13 @@ func (c *client) getContestBestAvg(contestID uint, past bool) map[model.Project]
 	}
 	for _, project := range model.AllProjectRoute() {
 		var score model.Score
-		if err := c.db.Where(conn, contestID).Where("project = ?", project).Where("avg != ?", 0).Order("avg").Order("created_at").First(&score).Error; err != nil {
+		if err := c.db.
+			Where(conn, contestID).
+			Where("project = ?", project).
+			Where("avg > ?", model.DNF).
+			Order("avg").
+			Order("created_at").
+			First(&score).Error; err != nil {
 			continue
 		}
 		out[project] = score
@@ -615,7 +734,11 @@ func (c *client) getPodiumsByContest(contestID uint) (out []Podiums) {
 
 	// 查这场比赛所有选手
 	var playerIDs []uint64
-	c.db.Model(&model.Score{}).Distinct("player_id").Where("contest_id = ?", contestID).Pluck("player_id", &playerIDs)
+	c.db.
+		Model(&model.Score{}).
+		Distinct("player_id").
+		Where("contest_id = ?", contestID).
+		Pluck("player_id", &playerIDs)
 	if len(playerIDs) == 0 {
 		return
 	}
@@ -731,7 +854,11 @@ func (c *client) getPlayerDetail(playerId uint) PlayerDetail {
 	}
 
 	var contestIDs []uint64
-	c.db.Model(&model.Score{}).Distinct("contest_id").Where("player_id = ?", playerId).Pluck("contest_id", &contestIDs)
+	c.db.
+		Model(&model.Score{}).
+		Distinct("contest_id").
+		Where("player_id = ?", playerId).
+		Pluck("contest_id", &contestIDs)
 
 	out := PlayerDetail{
 		Player:        player,
@@ -742,9 +869,9 @@ func (c *client) getPlayerDetail(playerId uint) PlayerDetail {
 	c.db.Model(&model.Score{}).Find(&score, "player_id = ?", playerId)
 	for _, s := range score {
 
-		if s.Project == model.Cube333MBF {
+		if s.Project.RouteType() == model.RouteTypeRepeatedly {
 			out.RecoveryNumber += 1
-			if s.Best == 0 {
+			if s.DBest() {
 				out.ValidRecoveryNumber += 1
 			}
 			continue
@@ -753,7 +880,7 @@ func (c *client) getPlayerDetail(playerId uint) PlayerDetail {
 		rs := s.GetResult()
 		out.RecoveryNumber += len(rs)
 		for _, val := range rs {
-			if val <= 0 {
+			if val < model.DNF {
 				out.ValidRecoveryNumber += 1
 			}
 		}

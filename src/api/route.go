@@ -20,14 +20,18 @@ func (c *Client) initRoute() {
 
 	{ // 后台
 
+		// 授权
 		api.POST("/auth/token", c.ValidToken) // 获取授权
 
+		// 比赛
 		api.POST("/contest", c.AuthMiddleware, result.CreateContest(c.svc))               // 添加比赛
 		api.DELETE("/contest/:contest_id", c.AuthMiddleware, result.DeleteContest(c.svc)) // 删除比赛
 
+		// 玩家
 		api.POST("/player", c.AuthMiddleware, result.CreatePlayer(c.svc)) //  添加玩家或修改玩家
 		api.DELETE("/player", c.AuthMiddleware, result.DeletePlayer(c.svc))
 
+		// 成绩
 		api.POST("/score", c.AuthMiddleware, result.CreateScore(c.svc))           // 上传成绩
 		api.DELETE("/score", c.AuthMiddleware, result.DeleteScore(c.svc))         // 删除成绩
 		api.PUT("/score/end_contest", c.AuthMiddleware, result.EndContest(c.svc)) // 结束比赛并统计
@@ -45,6 +49,7 @@ func (c *Client) initRoute() {
 		api.GET("/contest/:contest_id", result.GetContest(c.svc))
 		api.GET("/player", result.GetPlayers(c.svc))
 		api.GET("/player/:player_id", result.GetPlayer(c.svc))
+		api.GET("/projects", result.ProjectList(c.svc))
 	}
 
 	{ // 榜单
