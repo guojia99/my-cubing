@@ -18,6 +18,7 @@ type RankScore struct {
 }
 
 type RoutesScores struct {
+	Final  bool          `json:"final"`
 	Round  []model.Round `json:"Round"`
 	Scores []model.Score `json:"Scores"`
 }

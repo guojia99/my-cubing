@@ -403,9 +403,17 @@ func (c *client) getScoreByContest(contestID uint) map[model.Project][]RoutesSco
 			out[pj] = make([]RoutesScores, 0)
 		}
 		out[pj] = append(out[pj], RoutesScores{
+			Final:  rs[0].Final,
 			Round:  rs,
 			Scores: scores,
 		})
+	}
+
+	for _, pj := range model.AllProjectRoute() {
+		if _, ok := out[pj]; !ok {
+			continue
+		}
+		sort.Slice(out[pj], func(i, j int) bool { return out[pj][i].Final })
 	}
 
 	return out
@@ -599,14 +607,17 @@ func (c *client) getPodiumsByPlayer(playerID uint) Podiums {
 			if !ok {
 				continue
 			}
+
+			// todo 名次先等
+
 			for idx, val := range score {
 				if val.PlayerID == playerID {
-					switch idx {
-					case 0:
-						out.Gold += 1
+					switch val.Rank {
 					case 1:
-						out.Silver += 1
+						out.Gold += 1
 					case 2:
+						out.Silver += 1
+					case 3:
 						out.Bronze += 1
 					}
 					out.PodiumsResults = append(out.PodiumsResults, PodiumsResult{
@@ -630,31 +641,27 @@ func (c *client) getContestTop(contestID uint, n int) map[model.Project][]model.
 	var out = make(map[model.Project][]model.Score)
 
 	// todo 用全部差的方式会比较好
-	for _, project := range model.AllProjectRoute() {
-		var score []model.Score
 
-		switch project.RouteType() {
-		case model.RouteTypeRepeatedly, model.RouteType3roundsBest, model.RouteType1rounds, model.RouteType5roundsBest:
-			c.db.
-				Where("contest_id = ?", contestID).
-				Where("project = ?", project).
-				Where("best > ?", model.DNF).
-				Order("best").
-				Limit(n).
-				Find(&score)
-		default:
-			c.db.
-				Where("contest_id = ?", contestID).
-				Where("project = ?", project).
-				Where("avg > ?", model.DNF).
-				Order("avg").
-				Order("best").
-				Limit(n).
-				Find(&score)
+	allScores := c.getScoreByContest(contestID)
+	for _, project := range model.AllProjectRoute() {
+		scores, ok := allScores[project]
+		if !ok {
+			continue
 		}
-		if len(score) > 0 {
-			out[project] = score
+		if len(scores) == 0 {
+			continue
 		}
+
+		// 只需要最后一轮的成绩
+		// todo 考虑同名次
+		lastScores := scores[0]
+		var s []model.Score
+		for i := 0; i < len(lastScores.Scores); i++ {
+			if i < 3 {
+				s = append(s, lastScores.Scores[i])
+			}
+		}
+		out[project] = s
 	}
 	return out
 }
@@ -747,17 +754,17 @@ func (c *client) getPodiumsByContest(contestID uint) (out []Podiums) {
 
 	var cache = make(map[uint]*Podiums)
 	for _, tt := range c.getContestTop(contestID, 3) {
-		for idx, val := range tt {
+		for _, val := range tt {
 			if _, ok := cache[val.PlayerID]; !ok {
 				cache[val.PlayerID] = &Podiums{}
 			}
 
-			switch idx {
-			case 0:
-				cache[val.PlayerID].Gold += 1
+			switch val.Rank {
 			case 1:
-				cache[val.PlayerID].Silver += 1
+				cache[val.PlayerID].Gold += 1
 			case 2:
+				cache[val.PlayerID].Silver += 1
+			case 3:
 				cache[val.PlayerID].Bronze += 1
 			}
 		}

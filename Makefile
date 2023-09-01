@@ -3,6 +3,9 @@ all: go
 go:
 	go run main.go api
 
+admin:
+	go run main.go admin
+
 test_go:
 	go run main.go api --config ./etc/configs_sqlite.json
 

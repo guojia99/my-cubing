@@ -70,28 +70,38 @@ type (
 
 func GetToken() string {
 	url := uri + "/v2/api/auth/token"
-	method := "GET"
-	client := &http.Client{}
-	req, err := http.NewRequest(method, url, nil)
-	if err != nil {
-		return ""
+	method := "POST"
+
+	message := map[string]interface{}{
+		"user_name": "admin",
+		"password":  "admin",
 	}
-	req.Header.Add("user_name", "admin")
-	req.Header.Add("password", "admin")
+
+	body, _ := json.Marshal(message)
+	payload := bytes.NewReader(body)
+
+	client := &http.Client{}
+	req, err := http.NewRequest(method, url, payload)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Add("Content-Type", "application/json")
+
 	res, err := client.Do(req)
 	if err != nil {
-		return ""
+		panic(err)
 	}
 	defer res.Body.Close()
 
-	body, err := ioutil.ReadAll(res.Body)
+	data, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return ""
 	}
 
 	var m map[string]interface{}
-	_ = json.Unmarshal(body, &m)
-	return m["token"].(string)
+	_ = json.Unmarshal(data, &m)
+	fmt.Println(m)
+	return m["Token"].(string)
 }
 
 func AddPlayer(token string, name string, wcaID string) error {
