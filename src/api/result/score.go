@@ -83,3 +83,23 @@ func EndContest(svc *svc.Context) gin.HandlerFunc {
 		ctx.JSON(http.StatusOK, gin.H{})
 	}
 }
+
+type GetScoresRequest struct {
+	PlayerID  uint `uri:"player_id"`
+	ContestID uint `uri:"contest_id"`
+}
+
+func GetScores(svc *svc.Context) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var req GetScoresRequest
+		if err := ctx.BindUri(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		var score []model.Score
+		svc.DB.Where("player_id = ?", req.PlayerID).Where("contest_id = ?", req.ContestID).Find(&score)
+
+		ctx.JSON(http.StatusOK, score)
+	}
+}
