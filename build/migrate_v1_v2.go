@@ -121,7 +121,7 @@ func AddPlayer(token string, name string, wcaID string) error {
 	if err != nil {
 		return err
 	}
-	req.Header.Add("token", token)
+	req.Header.Add("Authorization", token)
 	req.Header.Add("Content-Type", "application/json")
 
 	res, err := client.Do(req)
@@ -157,7 +157,7 @@ func CreateContest(token, name, description string) error {
 	if err != nil {
 		return err
 	}
-	req.Header.Add("token", token)
+	req.Header.Add("Authorization", token)
 	req.Header.Add("Content-Type", "application/json")
 
 	res, err := client.Do(req)
@@ -192,7 +192,7 @@ func EndContest(token string, ContestID uint) error {
 	if err != nil {
 		return err
 	}
-	req.Header.Add("token", token)
+	req.Header.Add("Authorization", token)
 	req.Header.Add("Content-Type", "application/json")
 
 	res, err := client.Do(req)
@@ -221,7 +221,17 @@ func AddScore(token string, name string, contestId int, project string, num int,
 		"ContestID":  contestId,
 		"Project":    project,
 		"RouteNum":   num,
-		"Results":    result,
+		"Results": func() []float64 {
+			var out []float64
+			for _, val := range result {
+				if val == 0 {
+					out = append(out, -10000)
+				} else {
+					out = append(out, val)
+				}
+			}
+			return out
+		}(),
 	}
 
 	body, _ := json.Marshal(m)
@@ -232,7 +242,7 @@ func AddScore(token string, name string, contestId int, project string, num int,
 	if err != nil {
 		return err
 	}
-	req.Header.Add("token", token)
+	req.Header.Add("Authorization", token)
 	req.Header.Add("Content-Type", "application/json")
 
 	res, err := client.Do(req)
@@ -296,11 +306,13 @@ func main() {
 		log.Printf("error %s\n", err)
 		return
 	}
+
 	for _, contest := range contests {
 		if err = CreateContest(token, contest.Name, contest.Description); err != nil {
 			log.Printf("[CreateContest] error %s\n", err)
 			return
 		}
+
 		var scores []Score
 		_ = db.Where("contest_id = ?", contest.ID).Find(&scores)
 		for _, score := range scores {

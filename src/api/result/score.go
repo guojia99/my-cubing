@@ -100,6 +100,12 @@ func GetScores(svc *svc.Context) gin.HandlerFunc {
 		var score []model.Score
 		svc.DB.Where("player_id = ?", req.PlayerID).Where("contest_id = ?", req.ContestID).Find(&score)
 
+		for i, _ := range score {
+			var round model.Round
+			svc.DB.Where("id = ?", score[i].RouteID).First(&round)
+			score[i].RouteValue = round
+		}
+
 		ctx.JSON(http.StatusOK, score)
 	}
 }

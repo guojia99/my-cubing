@@ -61,9 +61,7 @@ func (c *client) addScore(playerName string, contestID uint, project model.Proje
 		}
 	}
 
-	if err = score.SetResult(result, penalty); err != nil {
-		return err
-	}
+	score.SetResult(result, penalty)
 	score.Penalty, _ = jsoniter.MarshalToString(penalty)
 	if err = c.db.Save(&score).Error; err != nil {
 		return err

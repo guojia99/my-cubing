@@ -96,7 +96,7 @@ func generateUniqueToken(username string, ts int64) string {
 // AuthMiddleware 授权中间件
 func (c *Client) AuthMiddleware(ctx *gin.Context) {
 	log.Printf("auth in %s", ctx.ClientIP())
-	token := ctx.GetHeader("token")
+	token := ctx.GetHeader("Authorization")
 	if token == "" {
 		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "auth error"})
 		return

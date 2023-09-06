@@ -51,7 +51,7 @@ type ScorePenalty struct {
 func (s *Score) DBest() bool { return s.Best <= DNF }
 func (s *Score) DAvg() bool  { return s.Avg <= DNF }
 
-func (s *Score) SetResult(in []float64, penalty ScorePenalty) error {
+func (s *Score) SetResult(in []float64, penalty ScorePenalty) {
 	for len(in) < 5 {
 		in = append(in, 0)
 	}
@@ -76,6 +76,7 @@ func (s *Score) SetResult(in []float64, penalty ScorePenalty) error {
 				continue
 			}
 			s.Best = cache[i]
+			break
 		}
 		if s.D() == 0 {
 			s.Avg = (s.Result1 + s.Result2 + s.Result3) / 3
@@ -89,19 +90,27 @@ func (s *Score) SetResult(in []float64, penalty ScorePenalty) error {
 			s.Result5+float64(len(penalty.R5)*2)
 
 		cache := in
-		sort.Slice(cache, func(i, j int) bool { return cache[i] < cache[j] })
+		sort.Slice(cache, func(i, j int) bool {
+			if cache[i] <= DNF {
+				return false
+			}
+			if cache[j] <= DNF {
+				return true
+			}
+			return cache[i] < cache[j]
+		})
+
 		for i := 0; i < len(cache); i++ {
 			if cache[i] <= DNF {
 				continue
 			}
 			s.Best = cache[i]
+			break
 		}
 
 		if s.Project.RouteType() == RouteType5RoundsAvgHT {
 			switch d := s.D(); d {
-			case 1:
-				s.Avg = (cache[2] + cache[3] + cache[4]) / 3 // 有一把D的情况下, 去掉最好成绩后取平均
-			case 0:
+			case 0, 1:
 				s.Avg = (cache[1] + cache[2] + cache[3]) / 3 // 正常去头尾
 			}
 			break
@@ -118,7 +127,6 @@ func (s *Score) SetResult(in []float64, penalty ScorePenalty) error {
 		s.Result3 += float64(len(penalty.R3) * 2)
 		s.Best = s.Result1 - (s.Result2 - s.Result1)
 	}
-	return nil
 }
 
 func (s *Score) GetResult() []float64 {
