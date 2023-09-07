@@ -168,6 +168,7 @@ var defaultProjectRounds = func() []CreateContestRequestRound {
 			Project: p,
 			Number:  1,
 			Name:    fmt.Sprintf("%s单轮赛", p.Cn()),
+			Part:    1,
 			IsStart: true,
 			Final:   true,
 			Upsets:  []string{},

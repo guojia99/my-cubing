@@ -130,7 +130,14 @@ func (s *Score) SetResult(in []float64, penalty ScorePenalty) {
 }
 
 func (s *Score) GetResult() []float64 {
-	return []float64{s.Result1, s.Result2, s.Result3, s.Result4, s.Result5}
+	switch s.Project.RouteType() {
+	case RouteType1rounds:
+		return []float64{s.Result1}
+	case RouteType3roundsAvg, RouteType3roundsBest, RouteTypeRepeatedly:
+		return []float64{s.Result1, s.Result2, s.Result3}
+	default:
+		return []float64{s.Result1, s.Result2, s.Result3, s.Result4, s.Result5}
+	}
 }
 
 func (s *Score) D() int {
@@ -189,7 +196,6 @@ func SortScores(in []Score) {
 	}
 
 	ro := in[0].Project.RouteType()
-
 	sort.Slice(in, func(i, j int) bool {
 		switch ro {
 		case RouteType1rounds, RouteType3roundsBest, RouteType5roundsBest, RouteTypeRepeatedly:
@@ -216,19 +222,19 @@ func SortScores(in []Score) {
 				in[i].Rank = prev.Rank
 				break
 			}
-			in[i].Rank += prev.Rank + 1
+			in[i].Rank = prev.Rank + 1
 		case RouteType1rounds:
 			if in[i].Best == prev.Best {
 				in[i].Rank = prev.Rank
 				break
 			}
-			in[i].Rank += prev.Rank + 1
+			in[i].Rank = prev.Rank + 1
 		case RouteType3roundsBest, RouteType5roundsBest, RouteType3roundsAvg, RouteType5roundsAvg, RouteType5RoundsAvgHT:
 			if in[i].Best == prev.Best && in[i].Avg == prev.Avg {
 				in[i].Rank = prev.Rank
 				break
 			}
-			in[i].Rank += prev.Rank + 1
+			in[i].Rank = prev.Rank + 1
 		}
 		prev = in[i]
 	}

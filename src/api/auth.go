@@ -54,11 +54,6 @@ func (c *Client) ValidToken(ctx *gin.Context) {
 		ctx.JSON(http.StatusNetworkAuthenticationRequired, gin.H{"error": "request has empty"})
 		return
 	}
-	key := "auth_token" + req.PassWord + req.PassWord
-	if token, ok := c.svc.Cache.Get(key); ok {
-		ctx.JSON(http.StatusOK, token.(GetTokenResponse))
-		return
-	}
 
 	var admin Admin
 	if err := c.svc.DB.Where("user_name = ?", req.UserName).First(&admin).Error; err != nil {
@@ -79,7 +74,6 @@ func (c *Client) ValidToken(ctx *gin.Context) {
 		Ts:    admin.Timeout.Unix(),
 		Token: admin.Token,
 	}
-	_ = c.svc.Cache.Add(key, resp, time.Minute*30)
 	ctx.JSON(http.StatusOK, resp)
 }
 

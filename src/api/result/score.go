@@ -43,21 +43,18 @@ func CreateScore(svc *svc.Context) gin.HandlerFunc {
 
 type (
 	DeleteScoreRequest struct {
-		PlayerName string        `json:"PlayerName"`
-		ContestID  uint          `json:"ContestID"`
-		Project    model.Project `json:"Project"`
-		RouteNum   int           `json:"RouteNum"`
+		ScoreID uint `uri:"score_id"`
 	}
 )
 
 func DeleteScore(svc *svc.Context) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var req DeleteScoreRequest
-		if err := ctx.Bind(&req); err != nil {
+		if err := ctx.BindUri(&req); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		if err := svc.Core.RemoveScore(req.PlayerName, req.ContestID, req.Project, req.RouteNum); err != nil {
+		if err := svc.Core.RemoveScore(req.ScoreID); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}

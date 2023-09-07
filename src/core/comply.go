@@ -7,6 +7,7 @@
 package core
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"time"
@@ -103,39 +104,18 @@ func (c *client) addScore(playerName string, contestID uint, project model.Proje
 }
 
 // removeScoreByContestID 删除一条成绩
-func (c *client) removeScoreByContestID(playerName string, contestID uint, project model.Project, routeNum int) (err error) {
-	// 1. 确定比赛是否存在
-	var contest model.Contest
-	if err = c.db.Where("id = ?", contestID).First(&contest).Error; err != nil || contest.IsEnd {
-		return fmt.Errorf("the contest id end or error %+v", err)
-	}
-
-	// 2. 获取轮次信息
-	var round model.Round
-	if err = c.db.
-		Where("contest_id = ?", contestID).
-		Where("project = ?", project).
-		Where("number = ?", routeNum).
-		First(&round).Error; err != nil {
-		return err
-	}
-
-	// 3. 玩家信息
-	var player = model.Player{Name: playerName}
-	if err = c.db.FirstOrCreate(&player, "name = ?", playerName).Error; err != nil {
-		return err
-	}
-
-	// 4. 尝试找到本场比赛成绩
+func (c *client) removeScore(scoreID uint) (err error) {
 	var score model.Score
-	err = c.db.Model(&model.Score{}).
-		Where("player_id = ?", player.ID).
-		Where("contest_id = ?", contestID).
-		Where("route_id = ?", round.ID).
-		First(&score).Error
-
-	if err != nil {
+	if err = c.db.Model(&model.Score{}).Where("id = ?", scoreID).First(&score).Error; err != nil {
 		return err
+	}
+	var contest model.Contest
+	if err = c.db.First(&contest, "id = ?", score.ContestID).Error; err != nil {
+		return err
+	}
+
+	if contest.IsEnd {
+		return errors.New("contest is end")
 	}
 
 	return c.db.Delete(&score).Error
@@ -228,6 +208,8 @@ func (c *client) getBestScores() (bestSingle, bestAvg map[model.Project]model.Sc
 			continue
 		}
 
+		//fmt.Println("--------------------------")
+		//fmt.Println(project)
 		if err := c.db.
 			Where("best > ?", model.DNF).
 			Where("project = ?", project).
@@ -235,6 +217,9 @@ func (c *client) getBestScores() (bestSingle, bestAvg map[model.Project]model.Sc
 			First(&best).Error; err == nil {
 			bestSingle[project] = best
 		}
+		//else {
+		//	fmt.Println(err)
+		//}
 		if err := c.db.
 			Where("avg > ?", model.DNF).
 			Where("project = ?", project).
@@ -242,6 +227,9 @@ func (c *client) getBestScores() (bestSingle, bestAvg map[model.Project]model.Sc
 			First(&avg).Error; err == nil {
 			bestAvg[project] = avg
 		}
+		//else {
+		//	fmt.Println(err, "avg")
+		//}
 	}
 	return
 }
@@ -318,28 +306,30 @@ func (c *client) getSorScore() (single, avg []SorScore) {
 		for _, project := range model.WCAProjectRoute() {
 			var bestUse, avgUse bool
 			// best
-			for idx, val := range bestSingle[project] {
+			lastBestRank := len(bestSingle[project])
+			for _, val := range bestSingle[project] {
 				if val.PlayerID == player.ID {
-					playerCache[val.PlayerID].SingleCount += int64(idx + 1)
+					playerCache[val.PlayerID].SingleCount += int64(val.Rank)
 					bestUse = true
+					lastBestRank = val.Rank
 					break
 				}
 			}
-
 			// avg
-			for idx, val := range bestAvg[project] {
+			lastAvgRank := len(bestAvg[project])
+			for _, val := range bestAvg[project] {
 				if val.PlayerID == player.ID {
-					playerCache[val.PlayerID].AvgCount += int64(idx + 1)
+					playerCache[val.PlayerID].AvgCount += int64(val.Rank)
 					avgUse = true
+					lastAvgRank = val.Rank
 					break
 				}
 			}
-
 			if !bestUse {
-				playerCache[player.ID].SingleCount += int64(len(players))
+				playerCache[player.ID].SingleCount += int64(lastBestRank + 1)
 			}
 			if !avgUse {
-				playerCache[player.ID].AvgCount += int64(len(players))
+				playerCache[player.ID].AvgCount += int64(lastAvgRank + 1)
 			}
 		}
 	}
@@ -483,26 +473,30 @@ func (c *client) getSorScoreByContest(contestID uint) (single, avg []SorScore) {
 		for _, project := range model.WCAProjectRoute() {
 			var bestUse, avgUse bool
 			// best
-			for idx, val := range bestSingleCache[project] {
+			lastBestRank := len(bestSingleCache[project])
+			for _, val := range bestSingleCache[project] {
 				if val.PlayerID == player.ID {
-					playerCache[val.PlayerID].SingleCount += int64(idx + 1)
+					playerCache[val.PlayerID].SingleCount += int64(val.Rank)
 					bestUse = true
+					lastBestRank = val.Rank
 					break
 				}
 			}
 			// avg
-			for idx, val := range bestAvgCache[project] {
+			lastAvgRank := len(bestAvgCache[project])
+			for _, val := range bestAvgCache[project] {
 				if val.PlayerID == player.ID {
-					playerCache[val.PlayerID].AvgCount += int64(idx + 1)
+					playerCache[val.PlayerID].AvgCount += int64(val.Rank)
 					avgUse = true
+					lastAvgRank = val.Rank
 					break
 				}
 			}
 			if !bestUse {
-				playerCache[player.ID].SingleCount += int64(len(players))
+				playerCache[player.ID].SingleCount += int64(lastBestRank + 1)
 			}
 			if !avgUse {
-				playerCache[player.ID].AvgCount += int64(len(players))
+				playerCache[player.ID].AvgCount += int64(lastAvgRank + 1)
 			}
 		}
 	}
@@ -605,9 +599,7 @@ func (c *client) getPodiumsByPlayer(playerID uint) Podiums {
 			if !ok {
 				continue
 			}
-
 			// todo 名次先等
-
 			for idx, val := range score {
 				if val.PlayerID == playerID {
 					switch val.Rank {
@@ -653,10 +645,14 @@ func (c *client) getContestTop(contestID uint, n int) map[model.Project][]model.
 		// 只需要最后一轮的成绩
 		// todo 考虑同名次
 		lastScores := scores[0]
+
 		var s []model.Score
 		for i := 0; i < len(lastScores.Scores); i++ {
-			if i < 3 {
+			if i < n {
 				s = append(s, lastScores.Scores[i])
+			}
+			if i > n {
+				break
 			}
 		}
 		out[project] = s

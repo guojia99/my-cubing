@@ -27,7 +27,7 @@ type (
 		// AddScore 添加成绩
 		AddScore(playerName string, contestID uint, project model.Project, routeNum int, result []float64, penalty model.ScorePenalty) error
 		// RemoveScore 删除成绩
-		RemoveScore(playerName string, contestID uint, project model.Project, routeNum int) error
+		RemoveScore(scoreID uint) error
 		// StatisticalRecordsAndEndContest 结束比赛并统计记录
 		StatisticalRecordsAndEndContest(contestId uint) error
 	}
@@ -98,8 +98,8 @@ func (c *client) AddScore(playerName string, contestID uint, project model.Proje
 	return nil
 }
 
-func (c *client) RemoveScore(playerName string, contestID uint, project model.Project, routeNum int) error {
-	if err := c.removeScoreByContestID(playerName, contestID, project, routeNum); err != nil {
+func (c *client) RemoveScore(scoreID uint) error {
+	if err := c.removeScore(scoreID); err != nil {
 		return err
 	}
 	c.ReloadCache()

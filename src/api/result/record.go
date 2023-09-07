@@ -12,6 +12,12 @@ import (
 	"github.com/guojia99/my-cubing/src/svc"
 )
 
+type GetRecordResponse struct {
+	Size    int64          `json:"Size"`
+	Count   int64          `json:"Count"`
+	Records []model.Record `json:"Records"`
+}
+
 func GetRecords(svc *svc.Context) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
@@ -30,16 +36,28 @@ func GetRecords(svc *svc.Context) gin.HandlerFunc {
 			return
 		}
 
-		var records []model.Record
-		svc.DB.Order("created_at DESC").Order("id DESC").Offset(offset).Limit(limit).Find(&records)
+		var (
+			records []model.Record
+			count   int64
+		)
 
+		svc.DB.Order("created_at DESC").Order("id DESC").Offset(offset).Limit(limit).Find(&records)
+		svc.DB.Model(&model.Record{}).Count(&count)
 		for i := 0; i < len(records); i++ {
 			var score model.Score
 			svc.DB.First(&score, "id = ?", records[i].ScoreId)
 			records[i].ScoreValue = score
+
+			var contest model.Contest
+			svc.DB.First(&contest, "id = ?", records[i].ContestID)
+			records[i].ContestValue = contest
 		}
 
 		_ = svc.Cache.Add(key, records, time.Second*30)
-		ctx.JSON(http.StatusOK, records)
+		ctx.JSON(http.StatusOK, GetRecordResponse{
+			Size:    0,
+			Count:   count,
+			Records: records,
+		})
 	}
 }

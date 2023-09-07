@@ -34,7 +34,7 @@ func (c *Client) initRoute() {
 		// 成绩
 		api.GET("/score/player/:player_id/contest/:contest_id", c.AuthMiddleware, result.GetScores(c.svc)) // 获取某场比赛玩家的所有成绩
 		api.POST("/score", c.AuthMiddleware, result.CreateScore(c.svc))                                    // 上传成绩
-		api.DELETE("/score", c.AuthMiddleware, result.DeleteScore(c.svc))                                  // 删除成绩
+		api.DELETE("/score/:score_id", c.AuthMiddleware, result.DeleteScore(c.svc))                        // 删除成绩
 		api.PUT("/score/end_contest", c.AuthMiddleware, result.EndContest(c.svc))                          // 结束比赛并统计
 	}
 

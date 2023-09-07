@@ -71,6 +71,18 @@ func TestScore_SetResult1(t *testing.T) {
 			wantBest: 0,
 			wantAvg:  0,
 		},
+		{
+			name: "v2",
+			fields: fields{
+				Project: Cube666,
+			},
+			args: args{
+				in:      []float64{10, 20, 30, DNF, DNF},
+				penalty: ScorePenalty{},
+			},
+			wantBest: 10,
+			wantAvg:  20,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
