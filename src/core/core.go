@@ -25,7 +25,7 @@ type (
 		// ReloadCache 重置缓存
 		ReloadCache()
 		// AddScore 添加成绩
-		AddScore(playerName string, contestID uint, project model.Project, routeNum int, result []float64, penalty model.ScorePenalty) error
+		AddScore(playerID uint, contestID uint, project model.Project, roundId uint, result []float64, penalty model.ScorePenalty) error
 		// RemoveScore 删除成绩
 		RemoveScore(scoreID uint) error
 		// StatisticalRecordsAndEndContest 结束比赛并统计记录
@@ -90,8 +90,8 @@ func (c *client) ReloadCache() {
 	runtime.GC()
 }
 
-func (c *client) AddScore(playerName string, contestID uint, project model.Project, routeNum int, result []float64, penalty model.ScorePenalty) error {
-	if err := c.addScore(playerName, contestID, project, routeNum, result, penalty); err != nil {
+func (c *client) AddScore(playerID uint, contestID uint, project model.Project, roundId uint, result []float64, penalty model.ScorePenalty) error {
+	if err := c.addScore(playerID, contestID, project, roundId, result, penalty); err != nil {
 		return err
 	}
 	c.ReloadCache()

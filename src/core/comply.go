@@ -18,7 +18,7 @@ import (
 )
 
 // addScore 添加一条成绩
-func (c *client) addScore(playerName string, contestID uint, project model.Project, routeNum int, result []float64, penalty model.ScorePenalty) (err error) {
+func (c *client) addScore(playerID uint, contestID uint, project model.Project, roundID uint, result []float64, penalty model.ScorePenalty) (err error) {
 	// 1. 确定比赛是否存在
 	var contest model.Contest
 	if err = c.db.Where("id = ?", contestID).First(&contest).Error; err != nil || contest.IsEnd {
@@ -27,11 +27,7 @@ func (c *client) addScore(playerName string, contestID uint, project model.Proje
 
 	// 2. 获取轮次信息
 	var round model.Round
-	if err = c.db.
-		Where("contest_id = ?", contestID).
-		Where("project = ?", project).
-		Where("number = ?", routeNum).
-		First(&round).Error; err != nil {
+	if err = c.db.Where("id = ?", roundID).First(&round).Error; err != nil {
 		return err
 	}
 	if !round.IsStart {
@@ -39,8 +35,8 @@ func (c *client) addScore(playerName string, contestID uint, project model.Proje
 	}
 
 	// 3. 玩家信息
-	var player = model.Player{Name: playerName}
-	if err = c.db.Where("name = ?", playerName).FirstOrCreate(&player).Error; err != nil {
+	var player = model.Player{}
+	if err = c.db.Where("id = ?", playerID).First(&player).Error; err != nil {
 		return err
 	}
 
@@ -55,7 +51,7 @@ func (c *client) addScore(playerName string, contestID uint, project model.Proje
 	if err != nil || score.ID == 0 {
 		score = model.Score{
 			PlayerID:   player.ID,
-			PlayerName: playerName,
+			PlayerName: player.Name,
 			ContestID:  contestID,
 			RouteID:    round.ID,
 			Project:    project,
@@ -207,9 +203,6 @@ func (c *client) getBestScores() (bestSingle, bestAvg map[model.Project]model.Sc
 			}
 			continue
 		}
-
-		//fmt.Println("--------------------------")
-		//fmt.Println(project)
 		if err := c.db.
 			Where("best > ?", model.DNF).
 			Where("project = ?", project).
@@ -217,9 +210,6 @@ func (c *client) getBestScores() (bestSingle, bestAvg map[model.Project]model.Sc
 			First(&best).Error; err == nil {
 			bestSingle[project] = best
 		}
-		//else {
-		//	fmt.Println(err)
-		//}
 		if err := c.db.
 			Where("avg > ?", model.DNF).
 			Where("project = ?", project).
@@ -227,9 +217,6 @@ func (c *client) getBestScores() (bestSingle, bestAvg map[model.Project]model.Sc
 			First(&avg).Error; err == nil {
 			bestAvg[project] = avg
 		}
-		//else {
-		//	fmt.Println(err, "avg")
-		//}
 	}
 	return
 }
@@ -599,7 +586,7 @@ func (c *client) getPodiumsByPlayer(playerID uint) Podiums {
 			if !ok {
 				continue
 			}
-			// todo 名次先等
+			// todo 名次相等
 			for idx, val := range score {
 				if val.PlayerID == playerID {
 					switch val.Rank {

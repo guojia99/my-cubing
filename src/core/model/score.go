@@ -53,7 +53,7 @@ func (s *Score) DAvg() bool  { return s.Avg <= DNF }
 
 func (s *Score) SetResult(in []float64, penalty ScorePenalty) {
 	for len(in) < 5 {
-		in = append(in, 0)
+		in = append(in, DNF)
 	}
 
 	s.Result1, s.Result2, s.Result3, s.Result4, s.Result5 = in[0], in[1], in[2], in[3], in[4]
