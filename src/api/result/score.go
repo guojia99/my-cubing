@@ -8,6 +8,7 @@ package result
 
 import (
 	"net/http"
+	"sort"
 
 	"github.com/gin-gonic/gin"
 
@@ -108,6 +109,7 @@ func GetScores(svc *svc.Context) gin.HandlerFunc {
 
 		var score []model.Score
 		svc.DB.Where("player_id = ?", req.PlayerID).Where("contest_id = ?", req.ContestID).Find(&score)
+		sort.Slice(score, func(i, j int) bool { return score[i].CreatedAt.Sub(score[j].CreatedAt) > 0 })
 
 		for i, _ := range score {
 			var round model.Round

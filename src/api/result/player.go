@@ -93,6 +93,22 @@ func CreatePlayer(svc *svc.Context) gin.HandlerFunc {
 
 func DeletePlayer(svc *svc.Context) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		var req PlayerRequest
+		if err := ctx.BindUri(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 
+		var player model.Player
+		if err := svc.DB.Where("id = ?", req.Id).First(&player).Error; err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		if err := svc.DB.Delete(&player).Error; err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		ctx.JSON(http.StatusOK, gin.H{})
 	}
 }

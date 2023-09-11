@@ -6,7 +6,9 @@
 
 package model
 
-import json "github.com/json-iterator/go"
+import (
+	json "github.com/json-iterator/go"
+)
 
 // Player 选手表
 type Player struct {
@@ -18,6 +20,8 @@ type Player struct {
 
 	Titles    string   `json:"-" gorm:"titles"` // 头衔
 	TitlesVal []string `json:"TitlesVal" gorm:"-"`
+
+	//DeletedAt gorm.DeletedAt `gorm:"index"` // 软删除
 }
 
 func (c *Player) GetTitles() []string {

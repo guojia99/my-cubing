@@ -29,7 +29,7 @@ func (c *Client) initRoute() {
 
 		// 玩家
 		api.POST("/player", c.AuthMiddleware, result.CreatePlayer(c.svc)) //  添加玩家或修改玩家
-		api.DELETE("/player", c.AuthMiddleware, result.DeletePlayer(c.svc))
+		api.DELETE("/player/:player_id", c.AuthMiddleware, result.DeletePlayer(c.svc))
 
 		// 成绩
 		api.GET("/score/player/:player_id/contest/:contest_id", c.AuthMiddleware, result.GetScores(c.svc)) // 获取某场比赛玩家的所有成绩
