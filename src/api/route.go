@@ -28,7 +28,8 @@ func (c *Client) initRoute() {
 		api.DELETE("/contest/:contest_id", c.AuthMiddleware, result.DeleteContest(c.svc)) // 删除比赛
 
 		// 玩家
-		api.POST("/player", c.AuthMiddleware, result.CreatePlayer(c.svc)) //  添加玩家或修改玩家
+		api.POST("/player", c.AuthMiddleware, result.CreatePlayer(c.svc)) //  添加玩家
+		api.PUT("/player", c.AuthMiddleware, result.UpdatePlayer(c.svc))  // 修改玩家
 		api.DELETE("/player/:player_id", c.AuthMiddleware, result.DeletePlayer(c.svc))
 
 		// 成绩

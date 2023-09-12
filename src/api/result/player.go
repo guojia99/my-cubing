@@ -91,6 +91,33 @@ func CreatePlayer(svc *svc.Context) gin.HandlerFunc {
 	}
 }
 
+func UpdatePlayer(svc *svc.Context) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var req model.Player
+		if err := ctx.Bind(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		var player model.Player
+		if err := svc.DB.Where("id = ?", req.ID).First(&player).Error; err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		player.Name = req.Name
+		player.ActualName = req.ActualName
+		player.WcaID = req.WcaID
+		player.TitlesVal = req.TitlesVal
+
+		if err := svc.DB.Save(&player).Error; err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		ctx.JSON(http.StatusOK, gin.H{})
+	}
+}
+
 func DeletePlayer(svc *svc.Context) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var req PlayerRequest
@@ -102,6 +129,17 @@ func DeletePlayer(svc *svc.Context) gin.HandlerFunc {
 		var player model.Player
 		if err := svc.DB.Where("id = ?", req.Id).First(&player).Error; err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		var count int64
+		if err := svc.DB.Model(&model.Score{}).Where("player_id = ?", req.Id).Count(&count).Error; err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		if count > 0 {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "can't not delete has score player"})
 			return
 		}
 

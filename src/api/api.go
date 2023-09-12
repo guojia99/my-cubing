@@ -28,7 +28,13 @@ func (c *Client) Run() error {
 
 	gin.SetMode(c.svc.Cfg.GinMode)
 	c.e = gin.New()
-	c.e.Use(gin.Logger(), gin.Recovery(), CorsMiddleware(), NewRateMiddleware(20))
+	c.e.Use(
+		gin.Logger(),
+		gin.Recovery(),
+		CorsMiddleware(),
+		NewRateMiddleware(20),
+		NewStatusCodeGreaterThan(400),
+	)
 	c.initRoute()
 
 	return c.e.Run(fmt.Sprintf("0.0.0.0:%d", c.svc.Cfg.Port))
