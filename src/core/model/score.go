@@ -70,7 +70,15 @@ func (s *Score) SetResult(in []float64, penalty ScorePenalty) {
 			s.Result3+float64(len(penalty.R3)*2)
 
 		cache := []float64{in[0], in[1], in[2]}
-		sort.Slice(cache, func(i, j int) bool { return cache[i] < cache[j] })
+		sort.Slice(cache, func(i, j int) bool {
+			if cache[i] <= DNF {
+				return false
+			}
+			if cache[j] <= DNF {
+				return true
+			}
+			return cache[i] < cache[j]
+		})
 		for i := 0; i < len(cache); i++ {
 			if cache[i] <= DNF {
 				continue
