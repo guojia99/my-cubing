@@ -53,11 +53,13 @@ func GetRecords(svc *svc.Context) gin.HandlerFunc {
 			records[i].ContestValue = contest
 		}
 
-		_ = svc.Cache.Add(key, records, time.Second*30)
-		ctx.JSON(http.StatusOK, GetRecordResponse{
+		out := GetRecordResponse{
 			Size:    0,
 			Count:   count,
 			Records: records,
-		})
+		}
+
+		_ = svc.Cache.Add(key, out, time.Second*30)
+		ctx.JSON(http.StatusOK, out)
 	}
 }
