@@ -108,7 +108,7 @@ func (s *Score) SetResult(in []float64, penalty ScorePenalty) {
 			break
 		}
 
-		if s.Project.RouteType() == RouteType5RoundsAvgHT {
+		if s.Project.RouteType() == RouteType5RoundsAvgHT || s.Project.RouteType() == RouteType5roundsBest {
 			switch d := s.D(); d {
 			case 0, 1:
 				s.Avg = (cache[1] + cache[2] + cache[3]) / 3 // 正常去头尾

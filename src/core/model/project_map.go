@@ -95,7 +95,7 @@ var projectsItems = []projectItem{
 	{Project: XCubeSkOH, Cn: "斜转单", RouteType: RouteType5RoundsAvgHT, IsWca: false},
 	{Project: XCubePyOH, Cn: "金字塔单", RouteType: RouteType5RoundsAvgHT, IsWca: false},
 	{Project: XCubeSq1OH, Cn: "SQ1单", RouteType: RouteType5RoundsAvgHT, IsWca: false},
-	{Project: XCubeMinxOH, Cn: "五魔单", RouteType: RouteType1rounds, IsWca: false},
+	{Project: XCubeMinxOH, Cn: "五魔单", RouteType: RouteType3roundsAvg, IsWca: false},
 	{Project: XCubeClockOH, Cn: "表单", RouteType: RouteType5RoundsAvgHT, IsWca: false},
 	{Project: XCube333Mirror, Cn: "镜面魔方", RouteType: RouteType5RoundsAvgHT, IsWca: false},
 	{Project: XCube333Mirroring, Cn: "镜向三阶", RouteType: RouteType5RoundsAvgHT, IsWca: false},
