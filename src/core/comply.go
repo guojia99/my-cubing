@@ -869,7 +869,7 @@ func (c *client) getPlayerDetail(playerId uint) PlayerDetail {
 		rs := s.GetResult()
 		out.RecoveryNumber += len(rs)
 		for _, val := range rs {
-			if val < model.DNF {
+			if val <= model.DNF {
 				out.ValidRecoveryNumber += 1
 			}
 		}
