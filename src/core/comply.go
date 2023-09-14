@@ -782,7 +782,9 @@ func (c *client) getAllPodium() []Podiums {
 	_ = c.db.Find(&players)
 	var out []Podiums
 	for _, player := range players {
-		out = append(out, c.getPodiumsByPlayer(player.ID))
+		pd := c.getPodiumsByPlayer(player.ID)
+		pd.PodiumsResults = nil
+		out = append(out, pd)
 	}
 	SortPodiums(out)
 	return out

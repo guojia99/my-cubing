@@ -270,7 +270,7 @@ func (c *client) GetAllPodium() []Podiums {
 		return val.([]Podiums)
 	}
 	out := c.getAllPodium()
-	_ = c.cache.Add(key, out, time.Minute*5)
+	_ = c.cache.Add(key, out, time.Minute*30)
 	return out
 }
 
