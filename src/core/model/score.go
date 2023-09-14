@@ -173,7 +173,7 @@ func (s *Score) IsBestScore(other Score) bool {
 		return s.Result1 > other.Result1
 	default:
 		if s.DBest() || other.DBest() {
-			return s.DBest()
+			return !s.DBest()
 		}
 		if s.Best == other.Best {
 			return s.Avg < other.Avg
@@ -188,7 +188,7 @@ func (s *Score) IsBestAvgScore(other Score) bool {
 		return true
 	default:
 		if s.DAvg() || other.DAvg() {
-			return s.DAvg()
+			return !s.DAvg()
 		}
 		if s.DAvg() && other.DAvg() {
 			return s.IsBestScore(other)
@@ -213,7 +213,7 @@ func SortScores(in []Score) {
 				return in[i].IsBestScore(in[j])
 			}
 			if in[i].DAvg() || in[j].DAvg() {
-				return in[i].DAvg()
+				return !in[i].DAvg()
 			}
 			return in[i].IsBestAvgScore(in[j])
 		}

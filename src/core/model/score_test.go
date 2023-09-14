@@ -100,3 +100,33 @@ func TestScore_SetResult1(t *testing.T) {
 		})
 	}
 }
+
+func TestSortScores(t *testing.T) {
+	scores := []Score{
+		{
+			Project: Cube333,
+			Best:    1,
+			Avg:     DNF,
+		},
+		{
+			Project: Cube333,
+			Best:    DNF,
+			Avg:     DNF,
+		},
+		{
+			Project: Cube333,
+			Best:    1,
+			Avg:     3,
+		},
+		{
+			Project: Cube333,
+			Best:    1,
+			Avg:     1,
+		},
+	}
+	SortScores(scores)
+
+	for _, val := range scores {
+		fmt.Println(val.Best, val.Avg)
+	}
+}

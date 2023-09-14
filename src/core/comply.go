@@ -194,7 +194,7 @@ func (c *client) getBestScores() (bestSingle, bestAvg map[model.Project]model.Sc
 		if project.RouteType() == model.RouteTypeRepeatedly {
 			if err := c.db.
 				Where("project = ?", project).
-				Where("bast > ?", model.DNF).
+				Where("best > ?", model.DNF).
 				Order("best").
 				Order("r1 DESC").
 				Order("r2").
@@ -241,7 +241,7 @@ func (c *client) getAllPlayerBestScore() (bestSingle, bestAvg map[model.Project]
 				if err := c.db.
 					Where("player_id = ?", player.ID).
 					Where("project = ?", project).
-					Where("bast > ?", model.DNF).
+					Where("best > ?", model.DNF).
 					Order("best DESC").
 					Order("r1 DESC").
 					Order("r2").
