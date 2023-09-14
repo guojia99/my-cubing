@@ -426,6 +426,7 @@ func (c *client) getSorScoreByContest(contestID uint) (single, avg []SorScore) {
 					Where("player_id = ?", player.ID).
 					Where("project = ?", project).
 					Where("best > ?", model.DNF).
+					Where("contest_id = ?", contestID).
 					Order("best").
 					Order("r1 DESC").
 					Order("r2").
@@ -439,6 +440,7 @@ func (c *client) getSorScoreByContest(contestID uint) (single, avg []SorScore) {
 				Where("player_id = ?", player.ID).
 				Where("project = ?", project).
 				Where("best > ?", model.DNF).
+				Where("contest_id = ?", contestID).
 				Order("best").
 				First(&b).Error; err == nil {
 				bestSingleCache[project] = append(bestSingleCache[project], b)
@@ -447,6 +449,7 @@ func (c *client) getSorScoreByContest(contestID uint) (single, avg []SorScore) {
 				Where("player_id = ?", player.ID).
 				Where("project = ?", project).
 				Where("avg > ?", model.DNF).
+				Where("contest_id = ?", contestID).
 				Order("avg").
 				First(&a).Error; err == nil {
 				bestAvgCache[project] = append(bestAvgCache[project], a)
