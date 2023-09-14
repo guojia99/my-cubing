@@ -15,11 +15,11 @@ type Player struct {
 	Model
 
 	Name       string `json:"Name" gorm:"unique;not null;column:name"` // 选手名
-	WcaID      string `json:"WcaID" gorm:"column:wca_id"`              // 选手WcaID，用于查询选手WCA的成绩
-	ActualName string `json:"ActualName" gorm:"actual_name"`           // 真实姓名
+	WcaID      string `json:"WcaID,omitempty" gorm:"column:wca_id"`    // 选手WcaID，用于查询选手WCA的成绩
+	ActualName string `json:"ActualName,omitempty" gorm:"actual_name"` // 真实姓名
 
 	Titles    string   `json:"-" gorm:"titles"` // 头衔
-	TitlesVal []string `json:"TitlesVal" gorm:"-"`
+	TitlesVal []string `json:"TitlesVal,omitempty" gorm:"-"`
 
 	//DeletedAt gorm.DeletedAt `gorm:"index"` // 软删除
 }

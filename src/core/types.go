@@ -43,9 +43,11 @@ type PodiumsResult struct {
 }
 
 type SorScore struct {
-	Player      model.Player `json:"Player"`
-	SingleCount int64        `json:"SingleCount"`
-	AvgCount    int64        `json:"AvgCount"`
+	Player         model.Player `json:"Player"`
+	SingleCount    int64        `json:"SingleCount,omitempty"`
+	SingleProjects int64        `json:"SingleProjects,omitempty"` // 参与项目数
+	AvgCount       int64        `json:"AvgCount,omitempty"`
+	AvgProjects    int64        `json:"AvgProjects,omitempty"` // 参与项目数
 }
 
 func SortPodiums(in []Podiums) {
