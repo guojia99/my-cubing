@@ -78,7 +78,7 @@ func (c *client) addScore(playerID uint, contestID uint, project model.Project, 
 		Where("id != ?", score.ID).
 		Order("best").
 		First(&bestSingle).Error
-	if ((err != nil || bestSingle.DBest()) && !score.DBest()) || (score.IsBestScore(bestSingle)) {
+	if !score.DBest() && ((err != nil || bestSingle.DBest()) || (score.IsBestScore(bestSingle))) {
 		// 之前没有成绩, 且当前有成绩
 		// 之前有成绩, 当前成绩好
 		score.IsBestSingle = true
@@ -92,7 +92,8 @@ func (c *client) addScore(playerID uint, contestID uint, project model.Project, 
 		Where("id != ?", score.ID).
 		Order("avg").
 		First(&bestAvg).Error
-	if ((err != nil || bestAvg.DAvg()) && !score.DAvg()) || score.IsBestAvgScore(bestAvg) {
+
+	if !score.DAvg() && ((err != nil || bestAvg.DAvg()) || score.IsBestAvgScore(bestAvg)) {
 		score.IsBestAvg = true
 		c.db.Save(&score)
 	}
