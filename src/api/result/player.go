@@ -105,15 +105,24 @@ func UpdatePlayer(svc *svc.Context) gin.HandlerFunc {
 			return
 		}
 
+		// 更新玩家
 		player.Name = req.Name
 		player.ActualName = req.ActualName
 		player.WcaID = req.WcaID
 		player.TitlesVal = req.TitlesVal
-
 		if err := svc.DB.Save(&player).Error; err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+
+		// 更新玩家所有成绩的name
+		if err := svc.DB.Model(&model.Score{}).
+			Where("player_id = ?", player.ID).
+			UpdateColumn("player_name", req.Name).Error; err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
 		ctx.JSON(http.StatusOK, gin.H{})
 	}
 }
