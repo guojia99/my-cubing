@@ -329,8 +329,18 @@ func (c *client) getSorScore() (single, avg []SorScore) {
 		avg = append(avg, SorScore{Player: val.Player, AvgCount: val.AvgCount, AvgProjects: val.AvgProjects})
 	}
 
-	sort.Slice(single, func(i, j int) bool { return single[i].SingleCount < single[j].SingleCount })
-	sort.Slice(avg, func(i, j int) bool { return avg[i].AvgCount < avg[j].AvgCount })
+	sort.Slice(single, func(i, j int) bool {
+		if single[i].SingleCount == single[j].SingleCount {
+			return single[i].SingleProjects < single[j].SingleProjects
+		}
+		return single[i].SingleCount < single[j].SingleCount
+	})
+	sort.Slice(avg, func(i, j int) bool {
+		if single[i].AvgCount == single[j].AvgCount {
+			return single[i].AvgProjects < single[j].AvgProjects
+		}
+		return avg[i].AvgCount < avg[j].AvgCount
+	})
 	return
 }
 
@@ -475,6 +485,7 @@ func (c *client) getSorScoreByContest(contestID uint) (single, avg []SorScore) {
 			for _, val := range bestSingleCache[project] {
 				if val.PlayerID == player.ID {
 					playerCache[val.PlayerID].SingleCount += int64(val.Rank)
+					playerCache[val.PlayerID].SingleProjects += 1
 					bestUse = true
 					lastBestRank = val.Rank
 					break
@@ -485,6 +496,7 @@ func (c *client) getSorScoreByContest(contestID uint) (single, avg []SorScore) {
 			for _, val := range bestAvgCache[project] {
 				if val.PlayerID == player.ID {
 					playerCache[val.PlayerID].AvgCount += int64(val.Rank)
+					playerCache[val.PlayerID].AvgProjects += 1
 					avgUse = true
 					lastAvgRank = val.Rank
 					break
@@ -503,8 +515,18 @@ func (c *client) getSorScoreByContest(contestID uint) (single, avg []SorScore) {
 		avg = append(avg, SorScore{Player: val.Player, AvgCount: val.AvgCount})
 	}
 
-	sort.Slice(single, func(i, j int) bool { return single[i].SingleCount < single[j].SingleCount })
-	sort.Slice(avg, func(i, j int) bool { return avg[i].AvgCount < avg[j].AvgCount })
+	sort.Slice(single, func(i, j int) bool {
+		if single[i].SingleCount == single[j].SingleCount {
+			return single[i].SingleProjects < single[j].SingleProjects
+		}
+		return single[i].SingleCount < single[j].SingleCount
+	})
+	sort.Slice(avg, func(i, j int) bool {
+		if single[i].AvgCount == single[j].AvgCount {
+			return single[i].AvgProjects < single[j].AvgProjects
+		}
+		return avg[i].AvgCount < avg[j].AvgCount
+	})
 	return
 }
 

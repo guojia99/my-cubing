@@ -8,6 +8,7 @@ package result
 
 import (
 	"net/http"
+	"regexp"
 
 	"github.com/gin-gonic/gin"
 
@@ -60,11 +61,21 @@ func GetPlayers(svc *svc.Context) gin.HandlerFunc {
 	}
 }
 
+func checkName(name string) bool {
+	pattern := regexp.MustCompile(`^[\p{Han}a-zA-Z0-9_]{2,15}$`)
+	return pattern.MatchString(name)
+}
+
 func CreatePlayer(svc *svc.Context) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var req model.Player
 		if err := ctx.Bind(&req); err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		if !checkName(req.Name) {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "the name is valid"})
 			return
 		}
 
@@ -102,6 +113,11 @@ func UpdatePlayer(svc *svc.Context) gin.HandlerFunc {
 		var player model.Player
 		if err := svc.DB.Where("id = ?", req.ID).First(&player).Error; err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		if !checkName(req.Name) {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "the name is valid"})
 			return
 		}
 
