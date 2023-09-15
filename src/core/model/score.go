@@ -20,22 +20,22 @@ type Score struct {
 	Model
 
 	// 数据库字段
-	PlayerID     uint    `json:"PlayerID" gorm:"index;not null;column:player_id"`   // 选手的ID
-	PlayerName   string  `json:"PlayerName" gorm:"column:player_name"`              // 玩家名
-	ContestID    uint    `json:"ContestID" gorm:"index;not null;column:contest_id"` // 比赛的ID
-	RouteID      uint    `json:"RouteID" gorm:"index;column:route_id"`              // 轮次
-	Project      Project `json:"Project" gorm:"not null;column:project"`            // 分项目 333/222/444等
-	Result1      float64 `json:"R1" gorm:"column:r1;NULL"`                          // 成绩1 多盲时这个成绩是实际还原数
-	Result2      float64 `json:"R2" gorm:"column:r2;NULL"`                          // 成绩2 多盲时这个成绩是尝试复原数
-	Result3      float64 `json:"R3" gorm:"column:r3;NULL"`                          // 成绩3 多盲时这个成绩是计时
-	Result4      float64 `json:"R4" gorm:"column:r4;NULL"`                          // 成绩4
-	Result5      float64 `json:"R5" gorm:"column:r5;NULL"`                          // 成绩5
-	Best         float64 `json:"Best" gorm:"column:best;NULL"`                      // 五把最好成绩
-	Avg          float64 `json:"Avg" gorm:"column:avg;NULL"`                        // 五把平均成绩
-	IsBestSingle bool    `json:"IsBestSingle" gorm:"column:is_best_single"`         // 这是玩家比往期最佳的还好的成绩
-	IsBestAvg    bool    `json:"IsBestAvg" gorm:"column:is_best_avg"`               // 这是这个玩家比往期最佳的成绩还好的平均成绩
-	Penalty      string  `json:"Penalty" grom:"column:penalty"`                     // 判罚 ScorePenalty
-	Rank         int     `json:"Rank,omitempty" gorm:"column:rank"`                 // 排名
+	PlayerID     uint    `json:"PlayerID,omitempty" gorm:"index;not null;column:player_id"`   // 选手的ID
+	PlayerName   string  `json:"PlayerName,omitempty" gorm:"column:player_name"`              // 玩家名
+	ContestID    uint    `json:"ContestID,omitempty" gorm:"index;not null;column:contest_id"` // 比赛的ID
+	RouteID      uint    `json:"RouteID,omitempty" gorm:"index;column:route_id"`              // 轮次
+	Project      Project `json:"Project,omitempty" gorm:"not null;column:project"`            // 分项目 333/222/444等
+	Result1      float64 `json:"R1,omitempty" gorm:"column:r1;NULL"`                          // 成绩1 多盲时这个成绩是实际还原数
+	Result2      float64 `json:"R2,omitempty" gorm:"column:r2;NULL"`                          // 成绩2 多盲时这个成绩是尝试复原数
+	Result3      float64 `json:"R3,omitempty" gorm:"column:r3;NULL"`                          // 成绩3 多盲时这个成绩是计时
+	Result4      float64 `json:"R4,omitempty" gorm:"column:r4;NULL"`                          // 成绩4
+	Result5      float64 `json:"R5,omitempty" gorm:"column:r5;NULL"`                          // 成绩5
+	Best         float64 `json:"Best,omitempty" gorm:"column:best;NULL"`                      // 五把最好成绩
+	Avg          float64 `json:"Avg,omitempty" gorm:"column:avg;NULL"`                        // 五把平均成绩
+	IsBestSingle bool    `json:"IsBestSingle,omitempty" gorm:"column:is_best_single"`         // 这是玩家比往期最佳的还好的成绩
+	IsBestAvg    bool    `json:"IsBestAvg,omitempty" gorm:"column:is_best_avg"`               // 这是这个玩家比往期最佳的成绩还好的平均成绩
+	Penalty      string  `json:"Penalty,omitempty" grom:"column:penalty"`                     // 判罚 ScorePenalty
+	Rank         int     `json:"Rank,omitempty" gorm:"column:rank"`                           // 排名
 
 	RouteValue Round `json:"RouteValue,omitempty" gorm:"-"` // 轮次实际内容
 }

@@ -13,37 +13,37 @@ import (
 )
 
 type RankScore struct {
-	Rank  int         `json:"Rank"` // 排名
-	Score model.Score `json:"Score"`
+	Rank  int         `json:"Rank,omitempty"` // 排名
+	Score model.Score `json:"Score,omitempty"`
 }
 
 type RoutesScores struct {
-	Final  bool          `json:"final"`
-	Round  []model.Round `json:"Round"`
-	Scores []model.Score `json:"Scores"`
+	Final  bool          `json:"final,omitempty"`
+	Round  []model.Round `json:"Round,omitempty"`
+	Scores []model.Score `json:"Scores,omitempty"`
 }
 
 type ScoresByContest struct {
-	Contest model.Contest `json:"Contest"`
-	Scores  []model.Score `json:"Scores"`
-	Rounds  []model.Round `json:"Rounds"`
+	Contest model.Contest `json:"Contest,omitempty"`
+	Scores  []model.Score `json:"Scores,omitempty"`
+	Rounds  []model.Round `json:"Rounds,omitempty"`
 }
 
 type Podiums struct {
-	Player         model.Player    `json:"Player"`
-	Gold           int64           `json:"Gold"`
-	Silver         int64           `json:"Silver"`
-	Bronze         int64           `json:"Bronze"`
+	Player         model.Player    `json:"Player,omitempty"`
+	Gold           int64           `json:"Gold,omitempty"`
+	Silver         int64           `json:"Silver,omitempty"`
+	Bronze         int64           `json:"Bronze,omitempty"`
 	PodiumsResults []PodiumsResult `json:"PodiumsResults,omitempty"`
 }
 
 type PodiumsResult struct {
-	Contest model.Contest `json:"Contest"`
-	Score   model.Score   `json:"Score"`
+	Contest model.Contest `json:"Contest,omitempty"`
+	Score   model.Score   `json:"Score,omitempty"`
 }
 
 type SorScore struct {
-	Player         model.Player `json:"Player"`
+	Player         model.Player `json:"Player,omitempty"`
 	SingleCount    int64        `json:"SingleCount,omitempty"`
 	SingleProjects int64        `json:"SingleProjects,omitempty"` // 参与项目数
 	AvgCount       int64        `json:"AvgCount,omitempty"`
@@ -63,16 +63,16 @@ func SortPodiums(in []Podiums) {
 }
 
 type RecordMessage struct {
-	Record  model.Record  `json:"Record"`
-	Player  model.Player  `json:"Player"`
-	Score   model.Score   `json:"Score"`
-	Contest model.Contest `json:"Contest"`
+	Record  model.Record  `json:"Record,omitempty"`
+	Player  model.Player  `json:"Player,omitempty"`
+	Score   model.Score   `json:"Score,omitempty"`
+	Contest model.Contest `json:"Contest,omitempty"`
 }
 
 type PlayerDetail struct {
 	model.Player
 
-	ContestNumber       int `json:"ContestNumber"`
-	ValidRecoveryNumber int `json:"ValidRecoveryNumber"`
-	RecoveryNumber      int `json:"RecoveryNumber"`
+	ContestNumber       int `json:"ContestNumber,omitempty"`
+	ValidRecoveryNumber int `json:"ValidRecoveryNumber,omitempty"`
+	RecoveryNumber      int `json:"RecoveryNumber,omitempty"`
 }
