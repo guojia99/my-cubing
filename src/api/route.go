@@ -12,6 +12,7 @@ import (
 
 	"github.com/guojia99/my-cubing/src/api/report"
 	"github.com/guojia99/my-cubing/src/api/result"
+	"github.com/guojia99/my-cubing/src/api/xlog"
 )
 
 func (c *Client) initRoute() {
@@ -39,10 +40,11 @@ func (c *Client) initRoute() {
 		api.PUT("/score/end_contest", c.AuthMiddleware, result.EndContest(c.svc))                          // 结束比赛并统计
 	}
 
-	{ //开发日志，关键点
+	{ //开发日志
 		xLog := api.Group("x-log")
-		xLog.GET("/")
-		xLog.PUT("/")
+		xLog.GET("/", xlog.GetXLogs(c.svc))
+		xLog.PUT("/", c.AuthMiddleware, xlog.AddXLog(c.svc))
+		xLog.DELETE("/:x_id", c.AuthMiddleware, xlog.DeleteXLog(c.svc))
 	}
 
 	{ // 基础查询
