@@ -336,8 +336,8 @@ func (c *client) getSorScore() (single, avg []SorScore) {
 		return single[i].SingleCount < single[j].SingleCount
 	})
 	sort.Slice(avg, func(i, j int) bool {
-		if single[i].AvgCount == single[j].AvgCount {
-			return single[i].AvgProjects < single[j].AvgProjects
+		if avg[i].AvgCount == avg[j].AvgCount {
+			return avg[i].AvgProjects < avg[j].AvgProjects
 		}
 		return avg[i].AvgCount < avg[j].AvgCount
 	})
@@ -522,8 +522,8 @@ func (c *client) getSorScoreByContest(contestID uint) (single, avg []SorScore) {
 		return single[i].SingleCount < single[j].SingleCount
 	})
 	sort.Slice(avg, func(i, j int) bool {
-		if single[i].AvgCount == single[j].AvgCount {
-			return single[i].AvgProjects < single[j].AvgProjects
+		if avg[i].AvgCount == avg[j].AvgCount {
+			return avg[i].AvgProjects < avg[j].AvgProjects
 		}
 		return avg[i].AvgCount < avg[j].AvgCount
 	})
