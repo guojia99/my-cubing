@@ -22,8 +22,8 @@ type ContestRequest struct {
 
 type (
 	ContestSorReportResponse struct {
-		Single []core.SorScore `json:"Single"`
-		Avg    []core.SorScore `json:"Avg"`
+		Single map[model.SorStatisticsKey][]core.SorScore `json:"Single"`
+		Avg    map[model.SorStatisticsKey][]core.SorScore `json:"Avg"`
 	}
 )
 

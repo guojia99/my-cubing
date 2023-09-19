@@ -67,8 +67,8 @@ func BestAllScoreReport(svc *svc.Context) gin.HandlerFunc {
 }
 
 type BestSorReportResponse struct {
-	BestSingle []core.SorScore `json:"BestSingle"`
-	BestAvg    []core.SorScore `json:"BestAvg"`
+	BestSingle map[model.SorStatisticsKey][]core.SorScore `json:"BestSingle"`
+	BestAvg    map[model.SorStatisticsKey][]core.SorScore `json:"BestAvg"`
 }
 
 func BestSorReport(svc *svc.Context) gin.HandlerFunc {

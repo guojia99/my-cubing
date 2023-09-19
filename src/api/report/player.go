@@ -107,3 +107,26 @@ func PlayerRecord(svc *svc.Context) gin.HandlerFunc {
 		ctx.JSON(http.StatusOK, svc.Core.GetRecordByPlayer(req.PlayerId))
 	}
 }
+
+type PlayerSorResponse struct {
+	Single map[model.SorStatisticsKey]core.SorScore `json:"Single"`
+	Avg    map[model.SorStatisticsKey]core.SorScore `json:"Avg"`
+}
+
+func PlayerSor(svc *svc.Context) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var req PlayerRequest
+		if err := ctx.BindUri(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		var player model.Player
+		if err := svc.DB.Where("id = ?", req.PlayerId).First(&player).Error; err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		signal, avg := svc.Core.GetPlayerSor(player.ID)
+		ctx.JSON(http.StatusOK, PlayerSorResponse{Single: signal, Avg: avg})
+	}
+}

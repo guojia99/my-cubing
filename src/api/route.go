@@ -76,6 +76,7 @@ func (c *Client) initRoute() {
 			rp.GET("/player/:player_id/score", report.PlayerScoreReport(c.svc))   // 某个玩家的成绩汇总
 			rp.GET("/player/:player_id/podium", report.PlayerPodiumReport(c.svc)) // 某个玩家的领奖台
 			rp.GET("/player/:player_id/record", report.PlayerRecord(c.svc))       // 某个玩家的记录
+			rp.GET("/player/:player_id/sor", report.PlayerSor(c.svc))
 		}
 	}
 }

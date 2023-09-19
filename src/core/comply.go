@@ -195,7 +195,7 @@ func (c *client) getBestScores() (bestSingle, bestAvg map[model.Project]model.Sc
 			if err := c.db.
 				Where("project = ?", project).
 				Where("best > ?", model.DNF).
-				Order("best").
+				Order("best DESC").
 				Order("r1 DESC").
 				Order("r2").
 				Order("r3").
@@ -282,68 +282,6 @@ func (c *client) getAllPlayerBestScore() (bestSingle, bestAvg map[model.Project]
 	return
 }
 
-// getSorScore 获取所有玩家的Sor排名 仅WCA项目
-func (c *client) getSorScore() (single, avg []SorScore) {
-	var players []model.Player
-	c.db.Find(&players)
-	bestSingle, bestAvg := c.getAllPlayerBestScore()
-	var playerCache = make(map[uint]*SorScore)
-
-	for _, player := range players {
-		playerCache[player.ID] = &SorScore{Player: player}
-		for _, project := range model.WCAProjectRoute() {
-			var bestUse, avgUse bool
-			// best
-			lastBestRank := len(bestSingle[project])
-			for _, val := range bestSingle[project] {
-				if val.PlayerID == player.ID {
-					playerCache[val.PlayerID].SingleCount += int64(val.Rank)
-					playerCache[val.PlayerID].SingleProjects += 1
-					bestUse = true
-					lastBestRank = val.Rank
-					break
-				}
-			}
-			// avg
-			lastAvgRank := len(bestAvg[project])
-			for _, val := range bestAvg[project] {
-				if val.PlayerID == player.ID {
-					playerCache[val.PlayerID].AvgCount += int64(val.Rank)
-					playerCache[val.PlayerID].AvgProjects += 1
-					avgUse = true
-					lastAvgRank = val.Rank
-					break
-				}
-			}
-			if !bestUse {
-				playerCache[player.ID].SingleCount += int64(lastBestRank + 1)
-			}
-			if !avgUse {
-				playerCache[player.ID].AvgCount += int64(lastAvgRank + 1)
-			}
-		}
-	}
-
-	for _, val := range playerCache {
-		single = append(single, SorScore{Player: val.Player, SingleCount: val.SingleCount, SingleProjects: val.SingleProjects})
-		avg = append(avg, SorScore{Player: val.Player, AvgCount: val.AvgCount, AvgProjects: val.AvgProjects})
-	}
-
-	sort.Slice(single, func(i, j int) bool {
-		if single[i].SingleCount == single[j].SingleCount {
-			return single[i].SingleProjects < single[j].SingleProjects
-		}
-		return single[i].SingleCount < single[j].SingleCount
-	})
-	sort.Slice(avg, func(i, j int) bool {
-		if avg[i].AvgCount == avg[j].AvgCount {
-			return avg[i].AvgProjects < avg[j].AvgProjects
-		}
-		return avg[i].AvgCount < avg[j].AvgCount
-	})
-	return
-}
-
 // getScoreByContest 获取一个比赛所有成绩
 func (c *client) getScoreByContest(contestID uint) map[model.Project][]RoutesScores {
 	var out = make(map[model.Project][]RoutesScores)
@@ -405,129 +343,6 @@ func (c *client) getScoreByContest(contestID uint) map[model.Project][]RoutesSco
 	}
 
 	return out
-}
-
-// getSorScoreByContest 获取比赛的Sor排名
-func (c *client) getSorScoreByContest(contestID uint) (single, avg []SorScore) {
-	// 查这场比赛所有选手
-	var playerIDs []uint64
-	c.db.
-		Model(&model.Score{}).
-		Distinct("player_id").
-		Where("contest_id = ?", contestID).
-		Pluck("player_id", &playerIDs)
-	if len(playerIDs) == 0 {
-		return
-	}
-	var players []model.Player
-	c.db.Where("id in ?", playerIDs).Find(&players)
-
-	// 查询这个比赛所有角色的最佳成绩
-	var (
-		bestSingleCache = make(map[model.Project][]model.Score)
-		bestAvgCache    = make(map[model.Project][]model.Score)
-	)
-
-	for _, project := range model.WCAProjectRoute() {
-		bestSingleCache[project] = make([]model.Score, 0)
-		bestAvgCache[project] = make([]model.Score, 0)
-		for _, player := range players {
-			var b, a model.Score
-			if project.RouteType() == model.RouteTypeRepeatedly {
-				if err := c.db.
-					Where("player_id = ?", player.ID).
-					Where("project = ?", project).
-					Where("best > ?", model.DNF).
-					Where("contest_id = ?", contestID).
-					Order("best").
-					Order("r1 DESC").
-					Order("r2").
-					Order("r3").
-					First(&b).Error; err == nil {
-					bestSingleCache[project] = append(bestSingleCache[project], b)
-				}
-				continue
-			}
-			if err := c.db.
-				Where("player_id = ?", player.ID).
-				Where("project = ?", project).
-				Where("best > ?", model.DNF).
-				Where("contest_id = ?", contestID).
-				Order("best").
-				First(&b).Error; err == nil {
-				bestSingleCache[project] = append(bestSingleCache[project], b)
-			}
-			if err := c.db.
-				Where("player_id = ?", player.ID).
-				Where("project = ?", project).
-				Where("avg > ?", model.DNF).
-				Where("contest_id = ?", contestID).
-				Order("avg").
-				First(&a).Error; err == nil {
-				bestAvgCache[project] = append(bestAvgCache[project], a)
-			}
-		}
-	}
-
-	for _, project := range model.WCAProjectRoute() {
-		model.SortByBest(bestSingleCache[project])
-		model.SortByAvg(bestAvgCache[project])
-	}
-
-	// 排序
-	var playerCache = make(map[uint]*SorScore)
-	for _, player := range players {
-		playerCache[player.ID] = &SorScore{Player: player}
-		for _, project := range model.WCAProjectRoute() {
-			var bestUse, avgUse bool
-			// best
-			lastBestRank := len(bestSingleCache[project])
-			for _, val := range bestSingleCache[project] {
-				if val.PlayerID == player.ID {
-					playerCache[val.PlayerID].SingleCount += int64(val.Rank)
-					playerCache[val.PlayerID].SingleProjects += 1
-					bestUse = true
-					lastBestRank = val.Rank
-					break
-				}
-			}
-			// avg
-			lastAvgRank := len(bestAvgCache[project])
-			for _, val := range bestAvgCache[project] {
-				if val.PlayerID == player.ID {
-					playerCache[val.PlayerID].AvgCount += int64(val.Rank)
-					playerCache[val.PlayerID].AvgProjects += 1
-					avgUse = true
-					lastAvgRank = val.Rank
-					break
-				}
-			}
-			if !bestUse {
-				playerCache[player.ID].SingleCount += int64(lastBestRank + 1)
-			}
-			if !avgUse {
-				playerCache[player.ID].AvgCount += int64(lastAvgRank + 1)
-			}
-		}
-	}
-	for _, val := range playerCache {
-		single = append(single, SorScore{Player: val.Player, SingleCount: val.SingleCount})
-		avg = append(avg, SorScore{Player: val.Player, AvgCount: val.AvgCount})
-	}
-
-	sort.Slice(single, func(i, j int) bool {
-		if single[i].SingleCount == single[j].SingleCount {
-			return single[i].SingleProjects < single[j].SingleProjects
-		}
-		return single[i].SingleCount < single[j].SingleCount
-	})
-	sort.Slice(avg, func(i, j int) bool {
-		if avg[i].AvgCount == avg[j].AvgCount {
-			return avg[i].AvgProjects < avg[j].AvgProjects
-		}
-		return avg[i].AvgCount < avg[j].AvgCount
-	})
-	return
 }
 
 // getPlayerScore 获取玩家所有成绩
@@ -909,4 +724,64 @@ func (c *client) getPlayerDetail(playerId uint) PlayerDetail {
 		}
 	}
 	return out
+}
+
+func (c *client) getContestAllBestScores(contestID uint) (single, avg map[model.Project][]model.Score) {
+	single = make(map[model.Project][]model.Score)
+	avg = make(map[model.Project][]model.Score)
+
+	// 查这场比赛所有选手
+	var playerIDs []uint64
+	if c.db.Model(&model.Score{}).Distinct("player_id").Where("contest_id = ?", contestID).Pluck("player_id", &playerIDs); len(playerIDs) == 0 {
+		return
+	}
+	var players []model.Player
+	c.db.Where("id in ?", playerIDs).Find(&players)
+
+	for _, project := range model.AllProjectRoute() {
+		single[project] = make([]model.Score, 0)
+		avg[project] = make([]model.Score, 0)
+		for _, player := range players {
+			var b, a model.Score
+			if project.RouteType() == model.RouteTypeRepeatedly {
+				if err := c.db.
+					Where("player_id = ?", player.ID).
+					Where("project = ?", project).
+					Where("best > ?", model.DNF).
+					Where("contest_id = ?", contestID).
+					Order("best").
+					Order("r1 DESC").
+					Order("r2").
+					Order("r3").
+					First(&b).Error; err == nil {
+					single[project] = append(single[project], b)
+				}
+				continue
+			}
+			if err := c.db.
+				Where("player_id = ?", player.ID).
+				Where("project = ?", project).
+				Where("best > ?", model.DNF).
+				Where("contest_id = ?", contestID).
+				Order("best").
+				First(&b).Error; err == nil {
+				single[project] = append(single[project], b)
+			}
+			if err := c.db.
+				Where("player_id = ?", player.ID).
+				Where("project = ?", project).
+				Where("avg > ?", model.DNF).
+				Where("contest_id = ?", contestID).
+				Order("avg").
+				First(&a).Error; err == nil {
+				avg[project] = append(avg[project], a)
+			}
+		}
+	}
+
+	for _, project := range model.AllProjectRoute() {
+		model.SortByBest(single[project])
+		model.SortByAvg(avg[project])
+	}
+	return
 }

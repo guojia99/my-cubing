@@ -17,64 +17,11 @@ import (
 	"github.com/guojia99/my-cubing/src/core/model"
 )
 
-type (
-	Core interface {
-		Read
-		ReadPlayer
-		ReadContest
-		// ReloadCache 重置缓存
-		ReloadCache()
-		// AddScore 添加成绩
-		AddScore(playerID uint, contestID uint, project model.Project, roundId uint, result []float64, penalty model.ScorePenalty) error
-		// RemoveScore 删除成绩
-		RemoveScore(scoreID uint) error
-		// StatisticalRecordsAndEndContest 结束比赛并统计记录
-		StatisticalRecordsAndEndContest(contestId uint) error
-	}
-
-	ReadPlayer interface {
-		// GetPlayerDetail 获取玩家参赛信息
-		GetPlayerDetail(playerId uint) PlayerDetail
-		// GetPlayerBestScore 获取玩家最佳成绩及排名
-		GetPlayerBestScore(playerId uint) (bestSingle, bestAvg map[model.Project]RankScore)
-		// GetAllPlayerBestScore 获取所有人最佳成绩
-		GetAllPlayerBestScore() (bestSingle, bestAvg map[model.Project][]model.Score)
-		// GetAllPlayerBestScoreByProject 获取某个项目最佳成绩
-		GetAllPlayerBestScoreByProject(project model.Project) (bestSingle, bestAvg []model.Score)
-		// GetPodiumsByPlayer 获取玩家领奖台数据
-		GetPodiumsByPlayer(playerID uint) Podiums
-		// GetRecordByPlayer 获取一个人的记录
-		GetRecordByPlayer(playerID uint) []RecordMessage
-		// GetPlayerScore 获取选手所有成绩
-		GetPlayerScore(playerID uint) (bestSingle, bestAvg []model.Score, scores []ScoresByContest)
-	}
-
-	ReadContest interface {
-		// GetSorScoreByContest 获取某场比赛的排名总和
-		GetSorScoreByContest(contestID uint) (single, avg []SorScore)
-		// GetScoreByContest 获取某场比赛成绩排名
-		GetScoreByContest(contestID uint) map[model.Project][]RoutesScores
-		// GetPodiumsByContest 获取比赛的领奖台数据
-		GetPodiumsByContest(contestID uint) []Podiums
-	}
-
-	Read interface {
-		// GetBestScores 获取所有项目最佳成绩
-		GetBestScores() (bestSingle, bestAvg map[model.Project]model.Score)
-		// GetSorScore 获取排名总和
-		GetSorScore() (single, avg []SorScore)
-		// GetAllPodium 获取全部人的领奖台排行
-		GetAllPodium() []Podiums
-		// GetRecordByContest 获取一场比赛中的记录
-		GetRecordByContest(contestID uint) []RecordMessage
-	}
-)
-
 func NewScoreCore(db *gorm.DB, debug bool) Core {
 	return &client{
 		debug: debug,
 		db:    db,
-		cache: cache.New(time.Minute*15, time.Minute*15),
+		cache: cache.New(time.Minute*60, time.Minute*60),
 	}
 }
 
@@ -122,7 +69,7 @@ func (c *client) GetBestScores() (bestSingle, bestAvg map[model.Project]model.Sc
 	}
 
 	bestSingle, bestAvg = c.getBestScores()
-	_ = c.cache.Add(key, [2]map[model.Project]model.Score{bestSingle, bestAvg}, time.Minute*15)
+	_ = c.cache.Add(key, [2]map[model.Project]model.Score{bestSingle, bestAvg}, time.Minute*60)
 	return
 }
 
@@ -157,7 +104,7 @@ func (c *client) GetPlayerBestScore(playerId uint) (bestSingle, bestAvg map[mode
 			}
 		}
 	}
-	_ = c.cache.Add(key, [2]map[model.Project]RankScore{bestSingle, bestAvg}, time.Minute*15)
+	_ = c.cache.Add(key, [2]map[model.Project]RankScore{bestSingle, bestAvg}, time.Minute*60)
 	return bestSingle, bestAvg
 }
 
@@ -169,7 +116,7 @@ func (c *client) GetPlayerDetail(playerId uint) PlayerDetail {
 	}
 
 	out := c.getPlayerDetail(playerId)
-	_ = c.cache.Add(key, out, time.Minute*15)
+	_ = c.cache.Add(key, out, time.Minute*60)
 	return out
 }
 
@@ -181,7 +128,7 @@ func (c *client) GetAllPlayerBestScore() (bestSingle, bestAvg map[model.Project]
 	}
 
 	bestSingle, bestAvg = c.getAllPlayerBestScore()
-	_ = c.cache.Add(key, [2]map[model.Project][]model.Score{bestSingle, bestAvg}, time.Minute*15)
+	_ = c.cache.Add(key, [2]map[model.Project][]model.Score{bestSingle, bestAvg}, time.Minute*60)
 	return
 }
 
@@ -190,29 +137,63 @@ func (c *client) GetAllPlayerBestScoreByProject(project model.Project) (bestSing
 	return best[project], avg[project]
 }
 
-func (c *client) GetSorScore() (single, avg []SorScore) {
+func (c *client) GetSorScore() (single, avg map[model.SorStatisticsKey][]SorScore) {
 	key := "GetSorScore"
 	if val, ok := c.cache.Get(key); ok && !c.debug {
-		result := val.([2][]SorScore)
+		result := val.([2]map[model.SorStatisticsKey][]SorScore)
 		return result[0], result[1]
 	}
 
 	single, avg = c.getSorScore()
-	_ = c.cache.Add(key, [2][]SorScore{single, avg}, time.Minute*15)
+	_ = c.cache.Add(key, [2]map[model.SorStatisticsKey][]SorScore{single, avg}, time.Minute*60)
 	return
 }
 
-func (c *client) GetSorScoreByContest(contestID uint) (single, avg []SorScore) {
+func (c *client) GetSorScoreByContest(contestID uint) (single, avg map[model.SorStatisticsKey][]SorScore) {
 	key := fmt.Sprintf("GetSorScoreByContest%d", contestID)
 
 	if val, ok := c.cache.Get(key); ok && !c.debug {
-		result := val.([2][]SorScore)
+		result := val.([2]map[model.SorStatisticsKey][]SorScore)
 		return result[0], result[1]
 	}
 
 	single, avg = c.getSorScoreByContest(contestID)
-	_ = c.cache.Add(key, [2][]SorScore{single, avg}, time.Minute*15)
+	_ = c.cache.Add(key, [2]map[model.SorStatisticsKey][]SorScore{single, avg}, time.Minute*60)
 	return
+}
+
+func (c *client) GetPlayerSor(playerID uint) (single, avg map[model.SorStatisticsKey]SorScore) {
+	key := fmt.Sprintf("GetPlayerSor_%d", playerID)
+	if val, ok := c.cache.Get(key); ok && !c.debug {
+		result := val.([2]map[model.SorStatisticsKey]SorScore)
+		return result[0], result[1]
+	}
+
+	single, avg = make(map[model.SorStatisticsKey]SorScore, len(model.SorKeyMap())), make(map[model.SorStatisticsKey]SorScore, len(model.SorKeyMap()))
+	singleCache, avgCache := c.GetSorScore()
+
+	for k, _ := range model.SorKeyMap() {
+		if _, ok := singleCache[k]; ok {
+			for idx, score := range singleCache[k] {
+				if score.Player.ID == playerID {
+					score.SingleRank = int64(idx + 1)
+					single[k] = score
+					break
+				}
+			}
+		}
+		if _, ok := avgCache[k]; ok {
+			for idx, score := range avgCache[k] {
+				if score.Player.ID == playerID {
+					score.AvgRank = int64(idx + 1)
+					avg[k] = score
+					break
+				}
+			}
+		}
+	}
+	_ = c.cache.Add(key, [2]map[model.SorStatisticsKey]SorScore{single, avg}, time.Minute*60)
+	return single, avg
 }
 
 func (c *client) GetScoreByContest(contestID uint) map[model.Project][]RoutesScores {
@@ -226,7 +207,7 @@ func (c *client) GetScoreByContest(contestID uint) map[model.Project][]RoutesSco
 	if out == nil {
 		return out
 	}
-	_ = c.cache.Add(key, out, time.Minute*15)
+	_ = c.cache.Add(key, out, time.Minute*60)
 	return out
 }
 
@@ -238,7 +219,7 @@ func (c *client) GetPlayerScore(playerID uint) (bestSingle, bestAvg []model.Scor
 	}
 
 	bestSingle, bestAvg, scores = c.getPlayerScore(playerID)
-	_ = c.cache.Add(key, []interface{}{bestSingle, bestAvg, scores}, time.Minute*15)
+	_ = c.cache.Add(key, []interface{}{bestSingle, bestAvg, scores}, time.Minute*60)
 	return
 }
 
@@ -249,7 +230,7 @@ func (c *client) GetPodiumsByPlayer(playerID uint) Podiums {
 	}
 
 	out := c.getPodiumsByPlayer(playerID)
-	_ = c.cache.Add(key, out, time.Minute*15)
+	_ = c.cache.Add(key, out, time.Minute*60)
 	return out
 }
 
@@ -260,7 +241,7 @@ func (c *client) GetPodiumsByContest(contestID uint) []Podiums {
 	}
 
 	out := c.getPodiumsByContest(contestID)
-	_ = c.cache.Add(key, out, time.Minute*15)
+	_ = c.cache.Add(key, out, time.Minute*60)
 	return out
 }
 

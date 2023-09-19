@@ -44,8 +44,10 @@ type PodiumsResult struct {
 
 type SorScore struct {
 	Player         model.Player `json:"Player,omitempty"`
+	SingleRank     int64        `json:"SingleRank,omitempty"`
 	SingleCount    int64        `json:"SingleCount,omitempty"`
 	SingleProjects int64        `json:"SingleProjects,omitempty"` // 参与项目数
+	AvgRank        int64        `json:"AvgRank,omitempty"`
 	AvgCount       int64        `json:"AvgCount,omitempty"`
 	AvgProjects    int64        `json:"AvgProjects,omitempty"` // 参与项目数
 }
