@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"sort"
 
 	"github.com/guojia99/my-cubing/src/core/model"
@@ -105,6 +106,7 @@ func (c *client) getSorScoreByContest(contestID uint) (single, avg map[model.Sor
 	c.db.Where("id in ?", playerIDs).Find(&players)
 
 	bestSingleCache, bestAvgCache := c.getContestAllBestScores(contestID)
+	fmt.Println(bestAvgCache[model.Cube333BF])
 	single, avg = ParserSorSort(players, bestSingleCache, bestAvgCache)
 	return
 }

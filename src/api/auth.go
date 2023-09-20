@@ -83,8 +83,7 @@ func generateUniqueToken(username string, ts int64) string {
 	randomBytes := make([]byte, 255-len(uniqueBytes))
 	_, _ = rand.Read(randomBytes)
 	tokenBytes := append(uniqueBytes, randomBytes...)
-	token := base64.URLEncoding.EncodeToString(tokenBytes)
-	return token
+	return base64.URLEncoding.EncodeToString(tokenBytes)
 }
 
 // AuthMiddleware 授权中间件
