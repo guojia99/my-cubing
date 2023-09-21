@@ -1,0 +1,10 @@
+{
+  "DB": {
+    "Driver": "sqlite",
+    "DSN": "./database.db"
+  },
+  "Debug": false,
+  "StaticPath": "./static",
+  "Port": 20000,
+  "GinMode": "debug"
+}

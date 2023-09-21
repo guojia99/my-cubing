@@ -7,15 +7,74 @@
 package main
 
 import (
-	"fmt"
-	"os"
+	"log"
+	"time"
 
-	"my-cubing/db"
-	"my-cubing/web"
+	"github.com/spf13/cobra"
+
+	"github.com/guojia99/my-cubing/src"
+	"github.com/guojia99/my-cubing/src/api"
+	"github.com/guojia99/my-cubing/src/svc"
 )
 
+func NewAPIServerCmd() *cobra.Command {
+	var config string
+
+	cmd := &cobra.Command{
+		Use:   "api",
+		Short: "魔方赛事系统API",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cli := &src.Client{}
+			return cli.Run(config)
+		},
+	}
+	cmd.Flags().StringVarP(&config, "config", "c", "./etc/configs.json", "配置")
+	return cmd
+}
+
+func NewAdminCmd() *cobra.Command {
+	var config string
+
+	var (
+		name     string
+		password string
+	)
+
+	cmd := &cobra.Command{
+		Use:   "admin",
+		Short: "添加管理员帐号密码",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			svcCli, err := svc.NewContext(config)
+			if err != nil {
+				return err
+			}
+
+			if err = svcCli.DB.AutoMigrate(&api.Admin{}); err != nil {
+				return err
+			}
+			err = svcCli.DB.Save(&api.Admin{
+				UserName: name,
+				Password: password,
+				Timeout:  time.Now(),
+			}).Error
+			return err
+		},
+	}
+	cmd.Flags().StringVarP(&config, "config", "c", "./etc/configs.json", "配置")
+	cmd.Flags().StringVarP(&name, "name", "u", "admin", "用户名")
+	cmd.Flags().StringVarP(&password, "password", "p", "admin", "帐号密码")
+	return cmd
+}
+
 func main() {
-	fmt.Println(os.Args)
-	db.Init()
-	web.NewClient().Run(os.Args[1])
+	root := &cobra.Command{
+		Use:   "my-cubing",
+		Short: "魔方赛事系统",
+	}
+
+	root.AddCommand(NewAPIServerCmd(), NewAdminCmd())
+	err := root.Execute()
+	if err != nil {
+		log.Println(err)
+	}
 }

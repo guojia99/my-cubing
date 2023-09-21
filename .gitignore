@@ -26,3 +26,6 @@ database.db
 vendor
 
 mycube
+
+./*.sql
+back.sql
