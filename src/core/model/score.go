@@ -264,12 +264,6 @@ func SortByBest(in []Score) {
 		}
 		prev = in[i]
 	}
-
-	for i := 0; i < len(in); i++ {
-		if in[i].Project.RouteType() == RouteTypeRepeatedly && in[i].Best == 0 {
-			in[i].Rank = 0
-		}
-	}
 }
 
 func SortByAvg(in []Score) {

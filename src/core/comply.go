@@ -247,6 +247,9 @@ func (c *client) getAllPlayerBestScore() (bestSingle, bestAvg map[model.Project]
 					Order("r2").
 					Order("r3").
 					First(&best).Error; err == nil {
+					var round model.Round
+					c.db.Where("id = ?", best.RouteID).First(&round)
+					best.RouteValue = round
 					bestSingle[project] = append(bestSingle[project], best)
 				}
 				continue
