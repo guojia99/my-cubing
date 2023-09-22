@@ -129,10 +129,15 @@ func (s *Score) SetResult(in []float64, penalty ScorePenalty) {
 			s.Avg = DNF
 		}
 	case RouteTypeRepeatedly:
+		s.Result3 += float64(len(penalty.R3) * 2)
+		// 还原低于两把
 		if s.Result1 < 2 {
 			break
 		}
-		s.Result3 += float64(len(penalty.R3) * 2)
+		// 如果还原次数没有大于失败数
+		if (s.Result2 - s.Result1) > s.Result1 {
+			break
+		}
 		s.Best = s.Result1 - (s.Result2 - s.Result1)
 	}
 }
