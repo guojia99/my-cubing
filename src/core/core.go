@@ -261,7 +261,7 @@ func (c *client) GetRecordByContest(contestID uint) []RecordMessage {
 		return val.([]RecordMessage)
 	}
 	out := c.getRecordByContest(contestID)
-	_ = c.cache.Add(key, out, time.Minute*5)
+	_ = c.cache.Add(key, out, time.Minute*30)
 	return out
 }
 
@@ -271,6 +271,16 @@ func (c *client) GetRecordByPlayer(playerID uint) []RecordMessage {
 		return val.([]RecordMessage)
 	}
 	out := c.getRecordByPlayer(playerID)
-	_ = c.cache.Add(key, out, time.Minute*5)
+	_ = c.cache.Add(key, out, time.Minute*30)
+	return out
+}
+
+func (c *client) GetPlayerOldEnemy(playerID uint) OldEnemyDetails {
+	key := fmt.Sprintf("GetPlayerOldEnemy%d", playerID)
+	if val, ok := c.cache.Get(key); ok && !c.debug {
+		return val.(OldEnemyDetails)
+	}
+	out := c.getPlayerOldEnemy(playerID)
+	_ = c.cache.Add(key, out, time.Minute*30)
 	return out
 }

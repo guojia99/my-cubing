@@ -130,3 +130,20 @@ func PlayerSor(svc *svc.Context) gin.HandlerFunc {
 		ctx.JSON(http.StatusOK, PlayerSorResponse{Single: signal, Avg: avg})
 	}
 }
+
+func PlayerOldEnemy(svc *svc.Context) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var req PlayerRequest
+		if err := ctx.BindUri(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		var player model.Player
+		if err := svc.DB.Where("id = ?", req.PlayerId).First(&player).Error; err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		ctx.JSON(http.StatusOK, svc.Core.GetPlayerOldEnemy(player.ID))
+	}
+}

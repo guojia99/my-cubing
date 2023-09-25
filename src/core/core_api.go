@@ -35,6 +35,8 @@ type (
 		GetPlayerScore(playerID uint) (bestSingle, bestAvg []model.Score, scores []ScoresByContest)
 		// GetPlayerSor 获取选手Sor数据
 		GetPlayerSor(playerID uint) (single, avg map[model.SorStatisticsKey]SorScore)
+		// GetPlayerOldEnemy 获取选手的宿敌列表
+		GetPlayerOldEnemy(playerID uint) OldEnemyDetails
 	}
 
 	ReadContest interface {

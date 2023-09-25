@@ -78,3 +78,11 @@ type PlayerDetail struct {
 	ValidRecoveryNumber int `json:"ValidRecoveryNumber,omitempty"`
 	RecoveryNumber      int `json:"RecoveryNumber,omitempty"`
 }
+
+type OldEnemyDetail struct {
+	Player model.Player                  `json:"Player,omitempty"`
+	Single map[model.Project]model.Score `json:"Single,omitempty"`
+	Avg    map[model.Project]model.Score `json:"Avg,omitempty"`
+}
+
+type OldEnemyDetails []OldEnemyDetail

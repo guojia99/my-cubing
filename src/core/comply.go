@@ -386,6 +386,7 @@ func (c *client) getPlayerScore(playerID uint) (bestSingle, bestAvg []model.Scor
 		var rounds []model.Round
 		c.db.Find(&rounds, "contest_id = ?", contest.ID)
 
+		sort.Slice(val, func(i, j int) bool { return val[i].ID > val[j].ID })
 		scoresByContest = append(scoresByContest, ScoresByContest{
 			Contest: contest,
 			Rounds:  rounds,
@@ -786,4 +787,100 @@ func (c *client) getContestAllBestScores(contestID uint) (single, avg map[model.
 		model.SortByAvg(avg[project])
 	}
 	return
+}
+
+func (c *client) getPlayerOldEnemy(playerId uint) OldEnemyDetails {
+	var out = make(OldEnemyDetails, 0)
+
+	var player model.Player
+	if err := c.db.First(&player, "id = ?", playerId).Error; err != nil {
+		return nil
+	}
+	var allPlayer []model.Player
+	if err := c.db.Where("id != ?", playerId).Find(&allPlayer).Error; err != nil {
+		return nil
+	}
+
+	allBest, allAvg := c.getAllPlayerBestScore()
+
+	// todo 抽出来
+	// 1. 缓存所有人的成绩
+	var (
+		bestCache = make(map[uint]map[model.Project]model.Score, len(allPlayer))
+		avgCache  = make(map[uint]map[model.Project]model.Score, len(allPlayer))
+	)
+	for _, p := range allPlayer {
+		bestCache[p.ID] = make(map[model.Project]model.Score)
+		avgCache[p.ID] = make(map[model.Project]model.Score)
+	}
+
+	for _, pj := range model.AllProjectRoute() {
+		for _, b := range allBest[pj] {
+			if b.PlayerID != playerId {
+				bestCache[b.PlayerID][pj] = b
+			}
+		}
+		for _, a := range allAvg[pj] {
+			if a.PlayerID != playerId {
+				avgCache[a.PlayerID][pj] = a
+			}
+		}
+	}
+
+	// 2. 对比自己的成绩， 只要有一个成绩比其他人好，这个人就不是宿敌, 对比时， 如果自己没有这个项目， 则算输
+	selfBest, selfAvg := c.GetPlayerBestScore(playerId)
+
+loop:
+	for _, p := range allPlayer {
+		otherBest, otherAvg := bestCache[p.ID], avgCache[p.ID]
+
+		for _, pj := range model.AllProjectRoute() {
+			// 1. 如果都没有这个项目， 不需要对比
+			selfB, ok1 := selfBest[pj]
+			otherB, ok2 := otherBest[pj]
+			if !ok1 && !ok2 {
+				continue
+			}
+			// 2. 如果自己有这个项目， 他没有， 直接退出循环
+			if ok1 && !ok2 {
+				continue loop
+			}
+			// 3. 如果他有这个项目，自己没有
+			if !ok1 && ok2 {
+				continue
+			}
+			// 4. 对比自己的单次是否比他好
+			if selfB.Rank <= otherB.Rank {
+				continue loop
+			}
+
+			// 5. 如果单次比他差，查看是自己和他否有平均
+			selfA, ok3 := selfAvg[pj]
+			otherA, ok4 := otherAvg[pj]
+
+			// 6. 都没有平均的时候
+			if !ok3 && !ok4 {
+				continue
+			}
+			// 7. 如果自己有平均， 他没有
+			if ok3 && !ok4 {
+				continue loop
+			}
+			// 8. 如果他有平均， 自己没有
+			if !ok3 && ok4 {
+				continue
+			}
+			// 9.对比平均排名
+			if selfA.Rank <= otherA.Rank {
+				continue loop
+			}
+		}
+
+		out = append(out, OldEnemyDetail{
+			Player: p,
+			Single: otherBest,
+			Avg:    otherAvg,
+		})
+	}
+	return out
 }

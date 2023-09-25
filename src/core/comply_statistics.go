@@ -10,6 +10,7 @@ import (
 func ParserSorSort(players []model.Player, bestSingle, bestAvg map[model.Project][]model.Score) (single, avg map[model.SorStatisticsKey][]SorScore) {
 	single, avg = make(map[model.SorStatisticsKey][]SorScore, len(model.SorKeyMap())), make(map[model.SorStatisticsKey][]SorScore, len(model.SorKeyMap()))
 
+	// todo 抽出来
 	var singlePlayerDict = make(map[model.Project]map[uint]model.Score)
 	var avgPlayerDict = make(map[model.Project]map[uint]model.Score)
 
