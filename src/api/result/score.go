@@ -90,6 +90,7 @@ func EndContest(svc *svc.Context) gin.HandlerFunc {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+		svc.Cache.Flush()
 		ctx.JSON(http.StatusOK, gin.H{})
 	}
 }

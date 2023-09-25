@@ -709,7 +709,6 @@ func (c *client) getPlayerDetail(playerId uint) PlayerDetail {
 	var score []model.Score
 	c.db.Model(&model.Score{}).Find(&score, "player_id = ?", playerId)
 	for _, s := range score {
-
 		if s.Project.RouteType() == model.RouteTypeRepeatedly {
 			out.RecoveryNumber += 1
 			if s.DBest() {

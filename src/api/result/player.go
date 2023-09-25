@@ -20,9 +20,6 @@ type (
 	PlayerRequest struct {
 		Id uint `uri:"player_id"`
 	}
-	PlayerResponse struct {
-		model.Player
-	}
 )
 
 func GetPlayer(svc *svc.Context) gin.HandlerFunc {

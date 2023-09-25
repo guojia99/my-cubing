@@ -34,6 +34,7 @@ const (
 	XCube666BF           Project = "666bf"
 	XCube777BF           Project = "777bf"
 	XCubePyFm            Project = "pyram_fm"
+	XCubePySk            Project = "skewb_fm"
 	XCube333Mini         Project = "333mini"
 	XCube222OH           Project = "222oh"
 	XCube333MiniOH       Project = "333mini_oh"
@@ -86,7 +87,8 @@ var projectsItems = []projectItem{
 	{Project: XCube222BF, Cn: "二盲", RouteType: RouteType5roundsBest, IsWca: false},
 	{Project: XCube666BF, Cn: "六盲", RouteType: RouteType1rounds, IsWca: false},
 	{Project: XCube777BF, Cn: "七盲", RouteType: RouteType1rounds, IsWca: false},
-	{Project: XCubePyFm, Cn: "塔少步", RouteType: RouteType3roundsBest, IsWca: false},
+	{Project: XCubePyFm, Cn: "塔少步", RouteType: RouteType3roundsAvg, IsWca: false},
+	{Project: XCubePySk, Cn: "斜少步", RouteType: RouteType3roundsAvg, IsWca: false},
 	{Project: XCube333Mini, Cn: "三阶迷你", RouteType: RouteType5RoundsAvgHT, IsWca: false},
 	{Project: XCube333MiniOH, Cn: "三阶迷你单", RouteType: RouteType5RoundsAvgHT, IsWca: false},
 	{Project: XCube222OH, Cn: "二单", RouteType: RouteType5RoundsAvgHT, IsWca: false},

@@ -135,7 +135,7 @@ func GetContests(svc *svc.Context) gin.HandlerFunc {
 			})
 		}
 		resp.Size = int64(len(contests))
-		_ = svc.Cache.Add(key, resp, time.Second*30)
+		_ = svc.Cache.Add(key, resp, time.Second*5)
 		ctx.JSON(http.StatusOK, resp)
 	}
 }
@@ -245,6 +245,7 @@ func CreateContest(svc *svc.Context) gin.HandlerFunc {
 
 		contest.SetRoundIds(roundIds)
 		svc.DB.Save(&contest)
+		svc.Cache.Flush()
 		ctx.JSON(http.StatusOK, gin.H{})
 	}
 }
@@ -280,6 +281,7 @@ func DeleteContest(svc *svc.Context) gin.HandlerFunc {
 		}
 
 		_ = svc.DB.Delete(&contest)
+		svc.Cache.Flush()
 		ctx.JSON(http.StatusOK, gin.H{})
 	}
 }
