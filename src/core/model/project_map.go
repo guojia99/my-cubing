@@ -33,6 +33,7 @@ const (
 	XCube222BF           Project = "222bf"
 	XCube666BF           Project = "666bf"
 	XCube777BF           Project = "777bf"
+	XCubePyBF            Project = "pyram_bf"
 	XCubePyFm            Project = "pyram_fm"
 	XCubePySk            Project = "skewb_fm"
 	XCube333Mini         Project = "333mini"
@@ -59,6 +60,7 @@ const (
 	XCube27AlienRelayAll Project = "27alien_relay"
 	XCube333Ghost        Project = "333ghost"
 	XCube333ZongZi       Project = "333Zongzi"
+	Xcube333Clone        Project = "333clone"
 )
 
 var projectsItems = []projectItem{
@@ -87,6 +89,7 @@ var projectsItems = []projectItem{
 	{Project: XCube222BF, Cn: "二盲", RouteType: RouteType5roundsBest, IsWca: false},
 	{Project: XCube666BF, Cn: "六盲", RouteType: RouteType1rounds, IsWca: false},
 	{Project: XCube777BF, Cn: "七盲", RouteType: RouteType1rounds, IsWca: false},
+	{Project: XCubePyBF, Cn: "塔盲", RouteType: RouteType3roundsBest, IsWca: false},
 	{Project: XCubePyFm, Cn: "塔少步", RouteType: RouteType3roundsAvg, IsWca: false},
 	{Project: XCubePySk, Cn: "斜少步", RouteType: RouteType3roundsAvg, IsWca: false},
 	{Project: XCube333Mini, Cn: "三阶迷你", RouteType: RouteType5RoundsAvgHT, IsWca: false},
@@ -113,6 +116,7 @@ var projectsItems = []projectItem{
 	{Project: XCube27AlienRelayAll, Cn: "全项目连拧", RouteType: RouteType1rounds, IsWca: false},
 	{Project: XCube333Ghost, Cn: "鬼魔", RouteType: RouteType5RoundsAvgHT, IsWca: false},
 	{Project: XCube333ZongZi, Cn: "粽子魔方", RouteType: RouteType5RoundsAvgHT, IsWca: false},
+	{Project: Xcube333Clone, Cn: "三阶克隆", RouteType: RouteType3roundsBest, IsWca: false},
 }
 
 var projectItemsMap = make(map[Project]projectItem, len(projectsItems))
